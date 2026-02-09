@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPMB & Humas Monitoring - Embed Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .embed-container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .embed-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .embed-header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .embed-header p {
+            color: #7f8c8d;
+            margin: 5px 0 0 0;
+        }
+        
+        .embed-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            border-left: 5px solid #3498db;
+        }
+        
+        .stat-box.smk {
+            border-left-color: #9b59b6;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .embed-table {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.ongoing {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .refresh-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .refresh-btn:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="embed-container">
+        <div class="embed-header">
+            <h1>Dashboard Monitoring SPMB & Agenda Humas</h1>
+            <p>Yayasan Pendidikan Teknologi - Update Real-time</p>
+        </div>
+        
+        <button class="refresh-btn" onclick="loadData()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Refresh Data
+        </button>
+        
+        <div class="embed-stats">
+            <div class="stat-box">
+                <div class="stat-label">Penerimaan SMP</div>
+                <div class="stat-value" id="stat-smp">0</div>
+                <div class="stat-sub">Siswa</div>
+            </div>
+            
+            <div class="stat-box smk">
+                <div class="stat-label">Penerimaan SMK</div>
+                <div class="stat-value" id="stat-smk">0</div>
+                <div class="stat-sub">Siswa</div>
+            </div>
+            
+            <div class="stat-box">
+                <div class="stat-label">Agenda Aktif</div>
+                <div class="stat-value" id="stat-agenda">0</div>
+                <div class="stat-sub">Kegiatan</div>
+            </div>
+        </div>
+        
+        <div class="embed-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Kegiatan</th>
+                        <th>Lokasi</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="agenda-table">
+                    <tr>
+                        <td colspan="4" style="text-align: center;">Memuat data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; color: #7f8c8d; font-size: 12px;">
+            <p>Update terakhir: <span id="last-update">-</span></p>
+            <p>© 2024 Yayasan Pendidikan Teknologi</p>
+        </div>
+    </div>
+    
+    <script>
+        async function loadData() {
+            try {
+                // Simulate data loading
+                const mockData = {
+                    spmbSMP: { total: 245 },
+                    spmbSMK: { total: 312 },
+                    agenda: [
+                        {
+                            tanggal: '2024-06-15',
+                            kegiatan: 'Open House SMP',
+                            lokasi: 'Kampus Utama',
+                            status: 'completed'
+                        },
+                        {
+                            tanggal: '2024-06-20',
+                            kegiatan: 'Workshop Teknologi',
+                            lokasi: 'Lab Komputer',
+                            status: 'ongoing'
+                        },
+                        {
+                            tanggal: '2024-06-25',
+                            kegiatan: 'Pameran Pendidikan',
+                            lokasi: 'Mall Kota',
+                            status: 'scheduled'
+                        }
+                    ]
+                };
+                
+                // Update stats
+                document.getElementById('stat-smp').textContent = mockData.spmbSMP.total;
+                document.getElementById('stat-smk').textContent = mockData.spmbSMK.total;
+                document.getElementById('stat-agenda').textContent = mockData.agenda.length;
+                
+                // Update table
+                const tableBody = document.getElementById('agenda-table');
+                tableBody.innerHTML = mockData.agenda.map(item => `
+                    <tr>
+                        <td>${item.tanggal}</td>
+                        <td>${item.kegiatan}</td>
+                        <td>${item.lokasi}</td>
+                        <td>
+                            <span class="status ${item.status}">
+                                ${item.status === 'completed' ? 'Selesai' : 
+                                  item.status === 'ongoing' ? 'Berlangsung' : 'Terjadwal'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // Update timestamp
+                const now = new Date();
+                document.getElementById('last-update').textContent = 
+                    now.toLocaleDateString('id-ID') + ' ' + now.toLocaleTimeString('id-ID');
+                    
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('agenda-table').innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #e74c3c;">
+                            Gagal memuat data
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', loadData);
+        
+        // Auto-refresh every 5 minutes
+        setInterval(loadData, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
