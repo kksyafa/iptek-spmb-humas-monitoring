@@ -67,16 +67,16 @@ const CONFIG = {
     SPMB: {
         TARGETS: {
             SMP: {
-                TOTAL: 300,
-                MONTHLY: [25, 30, 35, 40, 45, 50, 30, 25, 20, 15, 10, 5]
+                TOTAL: 80,
+                MONTHLY: [10, 15, 20, 10, 10, 5, 5, 5, 5, 5, 5, 5]
             },
             SMK: {
-                TOTAL: 400,
-                MONTHLY: [35, 40, 45, 50, 55, 60, 40, 35, 25, 20, 15, 10]
+                TOTAL: 260,
+                MONTHLY: [35, 40, 45, 50, 55, 30, 15, 10, 5, 5, 5, 5]
             }
         },
         PROGRAM_SMP: ['Reguler', 'Prestasi', 'Kemitraan', 'Beasiswa'],
-        PROGRAM_SMK: ['Teknik Komputer', 'Multimedia', 'Akuntansi', 'Tata Boga', 'Perhotelan']
+        PROGRAM_SMK: ['Teknik Sepeda Motor', 'Desain Komunikasi Visual', 'Akuntansi', 'Perhotelan']
     },
     
     // Agenda Configuration
