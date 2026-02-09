@@ -2,7 +2,7 @@
 const CONFIG = {
     // Google Spreadsheet Configuration
     SPREADSHEET: {
-        ID: '1YOUR_SPREADSHEET_ID_HERE', // Ganti dengan ID Google Sheet Anda
+        ID: '1fnk5hFLA9q-ZH9NoGQPD_dP0qIQTAT9piPWLkPbFLNE', // Ganti dengan ID Google Sheet Anda
         SHEETS: {
             SPMB_SMP: 'SPMB_SMP',
             SPMB_SMK: 'SPMB_SMK',
@@ -11,34 +11,34 @@ const CONFIG = {
             USERS: 'Users'
         },
         // URL Web App Google Apps Script
-        WEB_APP_URL: 'https://script.google.com/macros/s/YOUR_WEB_APP_ID/exec'
+        WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbxIMOTgcbLsZGU4cmbpOOvGaxiuc2ISbeaQaangfjMS9YF-BZ0wf9plMS9E7e5B0vHw/exec'
     },
     
     // Authentication Configuration
     USERS: [
         {
             username: 'admin',
-            password: 'admin123',
+            password: 'super123',
             name: 'Administrator',
             role: 'admin',
             unit: 'all',
-            email: 'admin@yayasan.example.com'
+            email: 'adm.smkiptektangsel@gmail.com'
         },
         {
             username: 'smp',
             password: 'smp123',
-            name: 'Koordinator SMP',
+            name: 'Ketua SMP',
             role: 'coordinator',
             unit: 'smp',
-            email: 'smp@yayasan.example.com'
+            email: 'badrus.setiawan@iptek.sch.id'
         },
         {
             username: 'smk',
             password: 'smk123',
-            name: 'Koordinator SMK',
+            name: 'Ketua SMK',
             role: 'coordinator',
             unit: 'smk',
-            email: 'smk@yayasan.example.com'
+            email: 'arif.hakim@iptek.sch.id'
         },
         {
             username: 'humas',
@@ -46,7 +46,7 @@ const CONFIG = {
             name: 'Staf Humas',
             role: 'staff',
             unit: 'humas',
-            email: 'humas@yayasan.example.com'
+            email: 'humas@iptek.sch.id'
         }
     ],
     
@@ -54,7 +54,7 @@ const CONFIG = {
     APP: {
         NAME: 'SPMB & Humas Monitoring',
         VERSION: '1.0.0',
-        AUTHOR: 'Yayasan Pendidikan Teknologi',
+        AUTHOR: 'Yayasan Insan Pendidikan Teknologi dan Kejuruan',
         YEAR: new Date().getFullYear(),
         MONTHS: [
             'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
