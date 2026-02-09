@@ -849,10 +849,10 @@ class DashboardApp {
                     { bulan: 6, count: 38, keterangan: 'Juni' }
                 ],
                 byProgram: [
-                    { program: 'Teknik Komputer', count: 120 },
-                    { program: 'Multimedia', count: 95 },
-                    { program: 'Akuntansi', count: 67 },
-                    { program: 'Tata Boga', count: 30 }
+                    { program: 'Teknik Sepeda Motor', count: 120 },
+                    { program: 'Desain Komunikasi Visual', count: 195 },
+                    { program: 'Akuntansi', count: 167 },
+                    { program: 'Perhotelan', count: 130 }
                 ]
             },
             agenda: [
@@ -863,7 +863,7 @@ class DashboardApp {
                     lokasi: 'Kampus Utama',
                     kategori: 'Open House',
                     status: 'completed',
-                    penanggung_jawab: 'Budi Santoso',
+                    penanggung_jawab: 'Arief Susilo, S.Pd',
                     deskripsi: 'Kegiatan open house untuk calon siswa SMP'
                 },
                 {
