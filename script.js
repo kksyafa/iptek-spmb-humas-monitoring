@@ -1112,18 +1112,18 @@ class DashboardApp {
         
         // Sample chart data
         const data = {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+            labels: ['Nov', 'Des', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul'],
             datasets: [
                 {
                     label: 'SMP',
-                    data: [45, 38, 52, 41, 34, 35],
+                    data: [5, 10, 15, 20, 25, 20, 15, 10, 5],
                     borderColor: CONFIG.THEME.COLORS.smp,
                     backgroundColor: CONFIG.THEME.COLORS.smp + '20',
                     tension: 0.4
                 },
                 {
                     label: 'SMK',
-                    data: [68, 54, 72, 58, 42, 38],
+                    data: [10, 20, 20, 20, 25, 35, 20, 40, 40],
                     borderColor: CONFIG.THEME.COLORS.smk,
                     backgroundColor: CONFIG.THEME.COLORS.smk + '20',
                     tension: 0.4
@@ -1195,7 +1195,7 @@ class DashboardApp {
             datasets: [
                 {
                     label: 'Realisasi',
-                    data: [45, 38, 52, 41, 34, 35],
+                    data: [10, 20, 20, 20, 25, 35, 20, 40, 40],
                     backgroundColor: color + '80',
                     borderColor: color,
                     borderWidth: 2
@@ -1230,25 +1230,31 @@ class DashboardApp {
     getMockData() {
         return {
             spmbSMP: {
-                total: 245,
+                total: 80,
                 monthly: [
-                    { bulan: 1, count: 45 },
-                    { bulan: 2, count: 38 },
-                    { bulan: 3, count: 52 },
-                    { bulan: 4, count: 41 },
-                    { bulan: 5, count: 34 },
-                    { bulan: 6, count: 35 }
+                    { bulan: 11, count: 5 },
+                    { bulan: 12, count: 5 },
+                    { bulan: 1, count: 10 },
+                    { bulan: 2, count: 10 },
+                    { bulan: 3, count: 15 },
+                    { bulan: 4, count: 20 }
+                    { bulan: 5, count: 5 },
+                    { bulan: 6, count: 5 },
+                    { bulan: 7, count: 5 }
                 ]
             },
             spmbSMK: {
-                total: 312,
+                total: 280,
                 monthly: [
-                    { bulan: 1, count: 68 },
-                    { bulan: 2, count: 54 },
-                    { bulan: 3, count: 72 },
-                    { bulan: 4, count: 58 },
-                    { bulan: 5, count: 42 },
-                    { bulan: 6, count: 38 }
+                     { bulan: 11, count: 20 },
+                    { bulan: 12, count: 25 },
+                    { bulan: 1, count: 30 },
+                    { bulan: 2, count: 35 },
+                    { bulan: 3, count: 40 },
+                    { bulan: 4, count: 45 }
+                    { bulan: 5, count: 30 },
+                    { bulan: 6, count: 35 },
+                    { bulan: 7, count: 20}
                 ]
             },
             agenda: [
