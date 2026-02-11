@@ -10,7 +10,7 @@ const CONFIG = {
     SPREADSHEET_ID: '1fnk5hFLA9q-ZH9NoGQPD_dP0qIQTAT9piPWLkPbFLNE',
     
     // 2. Google Apps Script Web App URL (Setelah deploy)
-    WEB_APP_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec',
+    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbxIMOTgcbLsZGU4cmbpOOvGaxiuc2ISbeaQaangfjMS9YF-BZ0wf9plMS9E7e5B0vHw/exec',
     
     // ============================================
     // JANGAN UBAH KODE DI BAWAH INI
