@@ -10,155 +10,177 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <!-- Loading Overlay -->
-    <div id="loading-overlay">
-        <div class="spinner">
-            <div class="spinner-inner"></div>
-        </div>
-        <p>Memuat Dashboard...</p>
+    <!-- Loading Screen -->
+    <div id="loading" class="loading-screen">
+        <div class="spinner"></div>
+        <p>Memuat Sistem Monitoring...</p>
     </div>
 
-    <!-- Login Modal -->
-    <div id="login-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-lock"></i> Login Dashboard</h2>
-            </div>
-            <div class="modal-body">
-                <div class="login-form">
-                    <div class="form-group">
-                        <label for="username"><i class="fas fa-user"></i> Username</label>
-                        <input type="text" id="username" placeholder="Masukkan username">
-                    </div>
-                    <div class="form-group">
-                        <label for="password"><i class="fas fa-key"></i> Password</label>
-                        <input type="password" id="password" placeholder="Masukkan password">
-                    </div>
-                    <button id="login-btn" class="btn btn-primary">
-                        <i class="fas fa-sign-in-alt"></i> Masuk
-                    </button>
-                    <div class="login-info">
-                        <p><i class="fas fa-info-circle"></i> Gunakan kredensial yang diberikan admin</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main App -->
-    <div id="app" style="display: none;">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-left">
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
                 <div class="logo">
                     <i class="fas fa-chart-line"></i>
-                    <div class="logo-text">
+                    <h1>SPMB & Humas Monitoring</h1>
+                </div>
+                <p>Sistem Monitoring Penerimaan Siswa dan Agenda Humas</p>
+            </div>
+            
+            <div class="login-form">
+                <h2><i class="fas fa-lock"></i> Masuk ke Sistem</h2>
+                
+                <div class="form-group">
+                    <label for="login-username"><i class="fas fa-user"></i> Username</label>
+                    <input type="text" id="login-username" placeholder="Masukkan username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-password"><i class="fas fa-key"></i> Password</label>
+                    <input type="password" id="login-password" placeholder="Masukkan password">
+                </div>
+                
+                <button id="btn-login" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                
+                <div class="login-info">
+                    <p><i class="fas fa-info-circle"></i> Gunakan kredensial:</p>
+                    <p><strong>Admin:</strong> admin / super123</p>
+                    <p><strong>SMP:</strong> smp / smp123</p>
+                    <p><strong>SMK:</strong> smk / smk123</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden until login) -->
+    <div id="app" class="app-container" style="display: none;">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <div>
                         <h1>SPMB & Humas Monitoring</h1>
-                        <p>Yayasan Insan Pendidikan Teknologi & Kejuruan </p>
+                        <p>Yayasan Insan Pendidikan Teknologi & Kejuruan</p>
                     </div>
                 </div>
             </div>
+            
             <div class="header-right">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <i class="fas fa-user"></i>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <span id="current-user">Administrator</span>
+                            <span id="current-role">Admin</span>
+                        </div>
                     </div>
-                    <div class="user-details">
-                        <span id="user-name">Administrator</span>
-                        <span id="user-role">Admin</span>
-                    </div>
-                    <button id="logout-btn" class="btn-icon">
+                    <button id="btn-logout" class="btn-logout">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <div class="main-container">
-            <!-- Sidebar -->
-            <nav class="sidebar">
-                <ul class="nav-menu">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <ul>
                     <li>
-                        <a href="#" class="nav-link active" data-page="dashboard">
+                        <a href="#" class="nav-item active" data-page="dashboard">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
-                    <li class="nav-section">
-                        <span class="section-title">SPMB Monitoring</span>
-                        <ul>
-                            <li>
-                                <a href="#" class="nav-link" data-page="spmb-smp">
-                                    <i class="fas fa-school"></i>
-                                    <span>SMP</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" class="nav-link" data-page="spmb-smk">
-                                    <i class="fas fa-graduation-cap"></i>
-                                    <span>SMK</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" class="nav-link" data-page="spmb-comparison">
-                                    <i class="fas fa-chart-bar"></i>
-                                    <span>Perbandingan</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="nav-section">
-                        <span class="section-title">Agenda Humas</span>
-                        <ul>
-                            <li>
-                                <a href="#" class="nav-link" data-page="agenda">
-                                    <i class="fas fa-calendar-alt"></i>
-                                    <span>Kalender Agenda</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" class="nav-link" data-page="agenda-list">
-                                    <i class="fas fa-list"></i>
-                                    <span>Daftar Kegiatan</span>
-                                </a>
-                            </li>
-                        </ul>
+                    
+                    <li class="nav-section">SPMB Monitoring</li>
+                    <li>
+                        <a href="#" class="nav-item" data-page="spmb-smp">
+                            <i class="fas fa-school"></i>
+                            <span>SMP</span>
+                        </a>
                     </li>
                     <li>
-                        <a href="#" class="nav-link" data-page="input-data">
+                        <a href="#" class="nav-item" data-page="spmb-smk">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>SMK</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-section">Agenda Humas</li>
+                    <li>
+                        <a href="#" class="nav-item" data-page="agenda">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Kalender Agenda</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-page="agenda-list">
+                            <i class="fas fa-list"></i>
+                            <span>Daftar Kegiatan</span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="#" class="nav-item" data-page="input-data">
                             <i class="fas fa-plus-circle"></i>
                             <span>Input Data</span>
                         </a>
                     </li>
+                    
                     <li>
-                        <a href="#" class="nav-link" data-page="gallery">
+                        <a href="#" class="nav-item" data-page="gallery">
                             <i class="fas fa-images"></i>
                             <span>Gallery Foto</span>
                         </a>
                     </li>
+                    
                     <li>
-                        <a href="#" class="nav-link" data-page="settings">
+                        <a href="#" class="nav-item" data-page="settings">
                             <i class="fas fa-cog"></i>
                             <span>Pengaturan</span>
                         </a>
                     </li>
                 </ul>
             </nav>
+        </aside>
 
-            <!-- Content Area -->
-            <main class="content-area" id="content-area">
-                <!-- Content will be loaded here -->
-            </main>
-        </div>
+        <!-- Main Content -->
+        <main class="main-content" id="main-content">
+            <div class="content-header" id="content-header">
+                <h2>Dashboard Overview</h2>
+                <p>Memuat data...</p>
+            </div>
+            
+            <div class="content-body" id="content-body">
+                <!-- Content akan dimuat di sini -->
+            </div>
+        </main>
 
-        <!-- Notification Container -->
-        <div id="notifications"></div>
+        <!-- Notifications -->
+        <div id="notifications" class="notifications"></div>
     </div>
 
     <!-- JavaScript Files -->
     <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="script.js"></script>
+    
+    <script>
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('login-screen').style.display = 'flex';
+            }, 1000);
+        });
+    </script>
 </body>
 </html>
