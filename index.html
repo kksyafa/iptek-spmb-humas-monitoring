@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
     <title>SPMB & Humas · Dashboard Monitoring</title>
-    <meta name="description" content="Dashboard monitoring SPMB dan Agenda Humas - Real-time dari Google Spreadsheet">
     
-    <!-- Google Fonts - Inter Modern -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Font Awesome 6 -->
@@ -15,23 +14,20 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
     <style>
-        /* Custom styles */
+        /* ============================================ */
+        /* CUSTOM STYLES - MODERN & CLEAN */
+        /* ============================================ */
+        
         :root {
             --primary: #f97316;
             --primary-dark: #ea580c;
             --primary-light: #ffedd5;
             --secondary: #0f172a;
-            --accent-1: #3b82f6;
-            --accent-2: #8b5cf6;
-            --accent-3: #06b6d4;
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
-            --info: #6366f1;
+            --info: #3b82f6;
             --gray-50: #f9fafb;
             --gray-100: #f3f4f6;
             --gray-200: #e5e7eb;
@@ -50,35 +46,34 @@
             color: var(--gray-900);
         }
         
-        /* Card glassmorphism effect */
+        /* Glassmorphism Card */
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.05);
         }
         
-        /* Stat card hover effect */
+        /* Stat Card Hover */
         .stat-card {
             transition: all 0.2s ease;
             border-radius: 24px;
             background: white;
-            box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.02), 0 12px 16px -4px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.02);
         }
         
         .stat-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
         }
         
-        /* Modern sidebar */
+        /* Modern Sidebar */
         .sidebar {
             background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-            color: white;
         }
         
-        /* Custom scrollbar */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -116,17 +111,7 @@
             animation: slideIn 0.3s ease-out;
         }
         
-        /* Pulse loading */
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .animate-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        
-        /* Gradient text */
+        /* Gradient Text */
         .gradient-text {
             background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
             -webkit-background-clip: text;
@@ -134,69 +119,69 @@
             background-clip: text;
         }
         
-        /* No data placeholder */
-        .no-data {
+        /* No Data Pattern */
+        .no-data-pattern {
             background: linear-gradient(45deg, #f8fafc 25%, #f1f5f9 25%, #f1f5f9 50%, #f8fafc 50%, #f8fafc 75%, #f1f5f9 75%, #f1f5f9 100%);
             background-size: 20px 20px;
-            border-radius: 16px;
-            border: 1px dashed #cbd5e1;
         }
     </style>
 </head>
 <body class="bg-[#f8fafc] antialiased">
 
 <!-- ============================================ -->
+// LOADING SCREEN
+// ============================================ -->
 <div id="loading-screen" class="fixed inset-0 bg-[#0f172a] z-[9999] flex flex-col items-center justify-center transition-all duration-700">
     <div class="relative">
-        <!-- Animated circle -->
-        <div class="w-24 h-24 bg-gradient-to-r from-[#f97316] to-[#f59e0b] rounded-full flex items-center justify-center shadow-2xl animate-pulse">
+        <div class="w-24 h-24 bg-gradient-to-r from-[#f97316] to-[#f59e0b] rounded-2xl flex items-center justify-center shadow-2xl animate-pulse">
             <i class="fas fa-graduation-cap text-white text-4xl"></i>
         </div>
-        <!-- Spinning ring -->
-        <div class="absolute -inset-1 border-4 border-transparent border-t-[#f97316] border-r-[#f59e0b] rounded-full animate-spin"></div>
+        <div class="absolute -inset-1 border-4 border-transparent border-t-[#f97316] border-r-[#f59e0b] rounded-2xl animate-spin"></div>
     </div>
     
     <h1 class="text-white text-3xl font-bold mt-8 tracking-tight">SPMB & Humas</h1>
-    <p class="text-[#94a3b8] text-sm mt-2 font-medium">Monitoring System · Yayasan Insan Pendidikan Teknologi & Kejuruan</p>
+    <p class="text-[#94a3b8] text-sm mt-2">Monitoring System · Yayasan Insan Pendidikan Teknologi & Kejuruan</p>
     
     <div class="w-64 h-1.5 bg-[#1e293b] rounded-full mt-8 overflow-hidden">
-        <div id="loading-progress" class="h-full bg-gradient-to-r from-[#f97316] to-[#f59e0b] transition-all duration-500 ease-out" style="width: 0%"></div>
+        <div id="loading-progress" class="h-full bg-gradient-to-r from-[#f97316] to-[#f59e0b] transition-all duration-500" style="width: 0%"></div>
     </div>
     
     <p id="loading-status" class="text-[#94a3b8] text-xs mt-4">Initializing system...</p>
 </div>
 
 <!-- ============================================ -->
+// MOBILE OVERLAY
+// ============================================ -->
 <div id="sidebar-overlay" class="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
 
 <!-- ============================================ -->
+// MAIN APP
+// ============================================ -->
 <div id="app" class="flex min-h-screen" style="display: none;">
 
-    <!-- ============================================ -->
-   
+    <!-- SIDEBAR -->
     <aside id="sidebar" class="sidebar w-80 fixed inset-y-0 left-0 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-2xl">
         
-        <!-- Logo Area dengan Glass Effect -->
+        <!-- Logo -->
         <div class="px-6 py-8">
             <div class="flex items-center gap-4">
                 <div class="relative">
                     <div class="w-14 h-14 bg-gradient-to-br from-[#f97316] to-[#f59e0b] rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
                         <i class="fas fa-graduation-cap text-white text-2xl"></i>
                     </div>
-                    <div class="absolute -inset-1 bg-orange-500/20 blur-xl rounded-full"></div>
                 </div>
                 <div>
                     <h1 class="text-white text-xl font-bold tracking-tight">SPMB & Humas</h1>
-                    <p class="text-[#94a3b8] text-xs font-medium mt-0.5">Monitoring System</p>
+                    <p class="text-[#94a3b8] text-xs mt-0.5">Monitoring System</p>
                 </div>
             </div>
         </div>
 
-        <!-- User Info Card - Mobile -->
+        <!-- User Info Mobile -->
         <div class="mx-6 mb-4 p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 lg:hidden">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-gradient-to-br from-[#f97316] to-[#f59e0b] rounded-xl flex items-center justify-center">
-                    <i class="fas fa-user text-white text-sm"></i>
+                    <i class="fas fa-user text-white"></i>
                 </div>
                 <div class="flex-1 min-w-0">
                     <p id="mobile-user-name" class="text-white text-sm font-semibold truncate">Administrator</p>
@@ -205,15 +190,14 @@
             </div>
         </div>
 
-        <!-- Navigation Menu -->
+        <!-- Navigation -->
         <nav class="flex-1 px-6 space-y-8 overflow-y-auto scrollbar-hide pb-6">
-            
-            <!-- Main Menu -->
+            <!-- Main -->
             <div>
                 <h3 class="text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-3">Main</h3>
                 <div class="space-y-1">
                     <a href="#" data-page="dashboard" onclick="app.navigateTo('dashboard'); return false;" class="block">
-                        <div id="nav-dashboard" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#f97316] text-white transition-all duration-200">
+                        <div id="nav-dashboard" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#f97316] text-white">
                             <i class="fas fa-chart-pie w-5 h-5"></i>
                             <span class="font-medium">Dashboard</span>
                         </div>
@@ -221,43 +205,31 @@
                 </div>
             </div>
 
-            <!-- SPMB Monitoring -->
+            <!-- SPMB -->
             <div>
                 <h3 class="text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-3">SPMB Monitoring</h3>
                 <div class="space-y-1">
                     <a href="#" data-page="spmb-smp" onclick="app.navigateTo('spmb-smp'); return false;" class="block">
-                        <div id="nav-spmb-smp" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                        <div id="nav-spmb-smp" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white">
                             <i class="fas fa-school w-5 h-5"></i>
                             <span class="font-medium">SMP</span>
                         </div>
                     </a>
                     <a href="#" data-page="spmb-smk" onclick="app.navigateTo('spmb-smk'); return false;" class="block">
-                        <div id="nav-spmb-smk" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                        <div id="nav-spmb-smk" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white">
                             <i class="fas fa-graduation-cap w-5 h-5"></i>
                             <span class="font-medium">SMK</span>
-                        </div>
-                    </a>
-                    <a href="#" data-page="spmb-comparison" onclick="app.navigateTo('spmb-comparison'); return false;" class="block">
-                        <div id="nav-spmb-comparison" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
-                            <i class="fas fa-chart-simple w-5 h-5"></i>
-                            <span class="font-medium">Perbandingan</span>
                         </div>
                     </a>
                 </div>
             </div>
 
-            <!-- Agenda Humas -->
+            <!-- Agenda -->
             <div>
                 <h3 class="text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-3">Agenda Humas</h3>
                 <div class="space-y-1">
-                    <a href="#" data-page="agenda" onclick="app.navigateTo('agenda'); return false;" class="block">
-                        <div id="nav-agenda" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
-                            <i class="fas fa-calendar w-5 h-5"></i>
-                            <span class="font-medium">Kalender Agenda</span>
-                        </div>
-                    </a>
                     <a href="#" data-page="agenda-list" onclick="app.navigateTo('agenda-list'); return false;" class="block">
-                        <div id="nav-agenda-list" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                        <div id="nav-agenda-list" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white">
                             <i class="fas fa-list-check w-5 h-5"></i>
                             <span class="font-medium">Daftar Kegiatan</span>
                         </div>
@@ -265,104 +237,83 @@
                 </div>
             </div>
 
-            <!-- Manajemen Data -->
+            <!-- Input Data -->
             <div>
                 <h3 class="text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-3">Manajemen Data</h3>
                 <div class="space-y-1">
                     <a href="#" data-page="input-data" onclick="app.navigateTo('input-data'); return false;" class="block">
-                        <div id="nav-input-data" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                        <div id="nav-input-data" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white">
                             <i class="fas fa-circle-plus w-5 h-5"></i>
                             <span class="font-medium">Input Data</span>
-                        </div>
-                    </a>
-                    <a href="#" data-page="gallery" onclick="app.navigateTo('gallery'); return false;" class="block">
-                        <div id="nav-gallery" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
-                            <i class="fas fa-images w-5 h-5"></i>
-                            <span class="font-medium">Gallery Foto</span>
-                        </div>
-                    </a>
-                    <a href="#" data-page="data-spmb" onclick="app.navigateTo('data-spmb'); return false;" class="block">
-                        <div id="nav-data-spmb" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
-                            <i class="fas fa-database w-5 h-5"></i>
-                            <span class="font-medium">Data SPMB</span>
-                        </div>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Sistem -->
-            <div>
-                <h3 class="text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-3">Sistem</h3>
-                <div class="space-y-1">
-                    <a href="#" data-page="settings" onclick="app.navigateTo('settings'); return false;" class="block">
-                        <div id="nav-settings" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
-                            <i class="fas fa-gear w-5 h-5"></i>
-                            <span class="font-medium">Pengaturan</span>
                         </div>
                     </a>
                 </div>
             </div>
         </nav>
 
-        <!-- User Profile Card - Bottom -->
+        <!-- User Profile -->
         <div class="px-6 pb-8 mt-auto">
-            <div id="user-profile" class="flex items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10">
-                <div class="w-12 h-12 bg-gradient-to-br from-[#f97316] to-[#f59e0b] rounded-xl flex items-center justify-center shadow-lg">
+            <div class="flex items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#f97316] to-[#f59e0b] rounded-xl flex items-center justify-center">
                     <i class="fas fa-user text-white text-lg"></i>
                 </div>
                 <div class="flex-1 min-w-0">
                     <p id="sidebar-user-name" class="text-white text-sm font-semibold truncate">Administrator</p>
                     <p id="sidebar-user-role" class="text-[#94a3b8] text-xs truncate">Admin</p>
                 </div>
-                <button onclick="app.handleLogout()" id="logout-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200" title="Logout">
+                <button onclick="app.handleLogout()" id="logout-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/70 hover:text-white">
                     <i class="fas fa-sign-out-alt text-sm"></i>
                 </button>
             </div>
         </div>
     </aside>
 
-    <!-- ============================================ -->
-   
+    <!-- MAIN CONTENT -->
     <main class="flex-1 lg:ml-80 p-6 lg:p-8 bg-[#f8fafc] min-h-screen">
         
         <!-- Mobile Header -->
         <div class="lg:hidden flex items-center justify-between mb-6 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-            <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-all duration-200">
+            <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100">
                 <i class="fas fa-bars text-gray-700 text-lg"></i>
             </button>
             <h1 class="text-gray-900 text-lg font-bold gradient-text">SPMB & Humas</h1>
             <div class="w-10"></div>
         </div>
 
-        <!-- DYNAMIC CONTENT AREA -->
+        <!-- CONTENT AREA -->
         <div id="content-area" class="animate-fade-in">
-            <!-- Content akan diisi oleh JavaScript - AWALNYA KOSONG -->
+            <!-- Content will be loaded by JavaScript -->
+            <div class="flex items-center justify-center h-64">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin text-3xl text-[#f97316] mb-4"></i>
+                    <p class="text-gray-500">Memuat dashboard...</p>
+                </div>
+            </div>
         </div>
     </main>
 </div>
 
 <!-- ============================================ -->
+// LOGIN MODAL
+// ============================================ -->
 <div id="login-modal" class="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-[9998] hidden flex items-center justify-center p-4">
-    <div class="glass-card w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-fade-in">
-        <div class="bg-gradient-to-r from-[#f97316] to-[#f59e0b] p-8 text-center relative">
-            <div class="absolute inset-0 bg-black/10"></div>
-            <div class="relative z-10">
-                <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <i class="fas fa-graduation-cap text-white text-3xl"></i>
-                </div>
-                <h2 class="text-white text-2xl font-bold mb-1">SPMB & Humas</h2>
-                <p class="text-white/90 text-sm">Monitoring System</p>
+    <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-fade-in">
+        <div class="bg-gradient-to-r from-[#f97316] to-[#f59e0b] p-8 text-center">
+            <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-graduation-cap text-white text-3xl"></i>
             </div>
+            <h2 class="text-white text-2xl font-bold">SPMB & Humas</h2>
+            <p class="text-white/90 text-sm mt-1">Monitoring System</p>
         </div>
         
-        <div class="p-8 bg-white">
+        <div class="p-8">
             <div class="space-y-5">
                 <div>
                     <label class="block text-gray-700 text-sm font-semibold mb-2">
                         <i class="fas fa-user text-gray-400 mr-2"></i>Username
                     </label>
                     <input type="text" id="login-username" placeholder="Masukkan username" 
-                           class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200">
+                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
                 </div>
                 
                 <div>
@@ -370,37 +321,20 @@
                         <i class="fas fa-lock text-gray-400 mr-2"></i>Password
                     </label>
                     <input type="password" id="login-password" placeholder="Masukkan password" 
-                           class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200">
+                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
                 </div>
                 
                 <button onclick="window.auth?.handleLogin()" id="login-btn" 
-                        class="w-full bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white py-3.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-orange-500/30 hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2">
-                    <i class="fas fa-arrow-right-to-bracket"></i>
-                    <span>Masuk ke Dashboard</span>
+                        class="w-full bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white py-3.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-orange-500/30 transition-all duration-200">
+                    <i class="fas fa-arrow-right-to-bracket mr-2"></i>
+                    Masuk ke Dashboard
                 </button>
                 
                 <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
                     <p class="text-gray-700 font-semibold mb-3 flex items-center gap-2 text-sm">
                         <i class="fas fa-circle-info text-[#f97316]"></i>
                         Akses Demo:
-                    </p>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div class="bg-white p-2.5 rounded-xl border border-gray-100">
-                            <span class="font-bold text-gray-900">Admin:</span>
-                            <span class="text-gray-600 ml-1">admin / super123</span>
-                        </div>
-                        <div class="bg-white p-2.5 rounded-xl border border-gray-100">
-                            <span class="font-bold text-gray-900">SMP:</span>
-                            <span class="text-gray-600 ml-1">smp / smp123</span>
-                        </div>
-                        <div class="bg-white p-2.5 rounded-xl border border-gray-100">
-                            <span class="font-bold text-gray-900">SMK:</span>
-                            <span class="text-gray-600 ml-1">smk / smk123</span>
-                        </div>
-                        <div class="bg-white p-2.5 rounded-xl border border-gray-100">
-                            <span class="font-bold text-gray-900">Humas:</span>
-                            <span class="text-gray-600 ml-1">humas / humas123</span>
-                        </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -409,156 +343,796 @@
 </div>
 
 <!-- ============================================ -->
+// NOTIFICATIONS
+// ============================================ -->
 <div id="notifications" class="fixed bottom-6 right-6 z-[9999] space-y-3 w-80"></div>
 
 <!-- ============================================ -->
+// MODALS
+// ============================================ -->
 <div id="success-modal" class="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-[9997] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-fade-in">
+    <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center">
         <div class="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <i class="fas fa-check-circle text-emerald-600 text-4xl"></i>
         </div>
         <h3 id="success-title" class="text-gray-900 text-xl font-bold mb-2">Berhasil!</h3>
         <p id="success-message" class="text-gray-500 text-sm mb-6">Data berhasil disimpan</p>
-        <button onclick="closeSuccessModal()" class="w-full px-4 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200">
-            Tutup
-        </button>
+        <button onclick="closeSuccessModal()" class="w-full px-4 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-semibold">Tutup</button>
     </div>
 </div>
 
-<!-- ============================================ -->
 <div id="error-modal" class="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-[9997] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-fade-in">
+    <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center">
         <div class="w-20 h-20 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <i class="fas fa-exclamation-circle text-red-600 text-4xl"></i>
         </div>
         <h3 id="error-title" class="text-gray-900 text-xl font-bold mb-2">Error</h3>
         <p id="error-message" class="text-gray-500 text-sm mb-6">Terjadi kesalahan</p>
-        <button onclick="closeErrorModal()" class="w-full px-4 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200">
-            Tutup
-        </button>
+        <button onclick="closeErrorModal()" class="w-full px-4 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-semibold">Tutup</button>
     </div>
 </div>
 
 <!-- ============================================ -->
-// CONFIRM MODAL
+// JAVASCRIPT - CONFIG
 // ============================================ -->
-<div id="confirm-modal" class="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-[9997] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-fade-in">
-        <div class="w-20 h-20 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-question-circle text-orange-600 text-4xl"></i>
-        </div>
-        <h3 id="confirm-title" class="text-gray-900 text-xl font-bold mb-2 text-center">Konfirmasi</h3>
-        <p id="confirm-message" class="text-gray-500 text-sm mb-6 text-center">Apakah Anda yakin?</p>
-        <div class="flex gap-3">
-            <button onclick="closeConfirmModal()" class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all duration-200">
-                Batal
-            </button>
-            <button id="confirm-action" class="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-all duration-200">
-                Ya, Hapus
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================ -->
-<script src="config.js"></script>
-<script src="auth.js"></script>
-<script src="script.js"></script>
-
 <script>
-    // ============================================
-    // GLOBAL FUNCTIONS
-    // ============================================
+// ============================================
+// KONFIGURASI - GANTI DENGAN DATA ANDA!
+// ============================================
+const CONFIG = {
+    // ⚠️ WAJIB GANTI: Spreadsheet ID dari URL Google Sheets
+    SPREADSHEET_ID: '1fnk5hFLA9q-ZH9NoGQPD_dP0qIQTAT9piPWLkPbFLNE',
     
-    // Toggle sidebar
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-        sidebar.classList.toggle('-translate-x-full');
-        overlay.classList.toggle('hidden');
-        document.body.classList.toggle('overflow-hidden');
-    }
+    // ⚠️ WAJIB GANTI: Web App URL setelah deploy
+    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzxz0elkrBX1ieKAVFCSS9591iU-9l5YDpe0eW1qf3JtCkQleCct8PwWOwLZ_eZ8bnC/exec',
     
-    // Close modals
-    function closeSuccessModal() {
-        document.getElementById('success-modal').classList.add('hidden');
-    }
+    // Nama sheet - JANGAN DIUBAH!
+    SHEETS: {
+        SPMB_SMP: 'SPMB_SMP',
+        SPMB_SMK: 'SPMB_SMK',
+        AGENDA: 'Agenda_Humas',
+        FOTO: 'Foto_Kegiatan',
+        USERS: 'Users'
+    },
     
-    function closeErrorModal() {
-        document.getElementById('error-modal').classList.add('hidden');
-    }
+    ACADEMIC_YEARS: ['2025/2026', '2026/2027'],
+    DEFAULT_ACADEMIC_YEAR: '2026/2027',
     
-    function closeConfirmModal() {
-        document.getElementById('confirm-modal').classList.add('hidden');
-    }
-    
-    // ============================================
-    // INITIALIZATION
-    // ============================================
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        // Simulate loading progress
-        let progress = 0;
-        const loadingStatus = document.getElementById('loading-status');
-        const loadingProgress = document.getElementById('loading-progress');
-        
-        const statusMessages = [
-            'Initializing system...',
-            'Loading configuration...',
-            'Connecting to spreadsheet...',
-            'Preparing dashboard...',
-            'Ready to go!'
-        ];
-        
-        const interval = setInterval(function() {
-            progress += 1;
-            
-            if (loadingProgress) {
-                loadingProgress.style.width = progress + '%';
-            }
-            
-            if (progress === 20) {
-                loadingStatus.textContent = statusMessages[1];
-            } else if (progress === 40) {
-                loadingStatus.textContent = statusMessages[2];
-            } else if (progress === 60) {
-                loadingStatus.textContent = statusMessages[3];
-            } else if (progress === 80) {
-                loadingStatus.textContent = statusMessages[4];
-            }
-            
-            if (progress >= 100) {
-                clearInterval(interval);
-                
-                // Hide loading screen
-                setTimeout(function() {
-                    const loadingScreen = document.getElementById('loading-screen');
-                    if (loadingScreen) {
-                        loadingScreen.style.opacity = '0';
-                        setTimeout(function() {
-                            loadingScreen.style.display = 'none';
-                        }, 500);
-                    }
-                }, 300);
-            }
-        }, 20);
-    });
-    
-    // Close modals when clicking outside
-    window.onclick = function(event) {
-        const successModal = document.getElementById('success-modal');
-        const errorModal = document.getElementById('error-modal');
-        
-        if (event.target === successModal) {
-            closeSuccessModal();
+    PERIODE_DEFINITIONS: {
+        '2026/2027': {
+            earlybird: { label: '21 Nov 2025 - 31 Jan 2026' },
+            gelombang1: { label: '01 Feb 2026 - 30 Apr 2026' },
+            gelombang2: { label: '01 Mei 2026 - 15 Jul 2026' }
+        },
+        '2025/2026': {
+            earlybird: { label: '21 Nov 2024 - 31 Jan 2025' },
+            gelombang1: { label: '01 Feb 2025 - 30 Apr 2025' },
+            gelombang2: { label: '01 Mei 2025 - 15 Jul 2025' }
         }
-        
-        if (event.target === errorModal) {
-            closeErrorModal();
-        }
-    };
+    },
+    
+    DEFAULT_USERS: [
+        { username: 'admin', password: 'admin123', name: 'Administrator', role: 'Admin', unit: 'all' },
+        { username: 'smp', password: 'smp123', name: 'Koordinator SMP', role: 'Koordinator SMP', unit: 'smp' },
+        { username: 'smk', password: 'smk123', name: 'Koordinator SMK', role: 'Koordinator SMK', unit: 'smk' },
+        { username: 'humas', password: 'humas123', name: 'Staf Humas', role: 'Staf Humas', unit: 'humas' }
+    ]
+};
+
+window.CONFIG = CONFIG;
 </script>
 
-<!-- ============================================ -->
+<script>
+// ============================================
+// AUTH SYSTEM
+// ============================================
+class AuthSystem {
+    constructor() {
+        this.currentUser = null;
+        this.isAuthenticated = false;
+        this.init();
+    }
+    
+    init() {
+        this.checkSession();
+        this.setupEventListeners();
+    }
+    
+    checkSession() {
+        const savedUser = localStorage.getItem('spmb_user');
+        if (savedUser) {
+            try {
+                this.currentUser = JSON.parse(savedUser);
+                this.isAuthenticated = true;
+                this.updateUserInfo();
+                this.hideLogin();
+                return true;
+            } catch (e) {
+                this.clearSession();
+            }
+        }
+        return false;
+    }
+    
+    setupEventListeners() {
+        const loginBtn = document.getElementById('login-btn');
+        if (loginBtn) loginBtn.addEventListener('click', () => this.handleLogin());
+        
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) logoutBtn.addEventListener('click', () => this.handleLogout());
+    }
+    
+    handleLogin() {
+        const username = document.getElementById('login-username')?.value;
+        const password = document.getElementById('login-password')?.value;
+        
+        if (!username || !password) {
+            this.showNotification('Username dan password harus diisi', 'error');
+            return;
+        }
+        
+        const user = CONFIG.DEFAULT_USERS.find(u => u.username === username && u.password === password);
+        
+        if (user) {
+            this.currentUser = user;
+            this.isAuthenticated = true;
+            localStorage.setItem('spmb_user', JSON.stringify(user));
+            this.updateUserInfo();
+            this.hideLogin();
+            this.showNotification(`Selamat datang, ${user.name}!`, 'success');
+            
+            // Trigger event untuk load data
+            const event = new CustomEvent('auth:login');
+            window.dispatchEvent(event);
+        } else {
+            this.showNotification('Username atau password salah', 'error');
+        }
+    }
+    
+    handleLogout() {
+        this.clearSession();
+        this.showLogin();
+        this.showNotification('Anda telah logout', 'info');
+    }
+    
+    clearSession() {
+        this.currentUser = null;
+        this.isAuthenticated = false;
+        localStorage.removeItem('spmb_user');
+    }
+    
+    showLogin() {
+        document.getElementById('login-modal')?.classList.remove('hidden');
+        document.getElementById('app').style.display = 'none';
+    }
+    
+    hideLogin() {
+        document.getElementById('login-modal')?.classList.add('hidden');
+        document.getElementById('app').style.display = 'flex';
+    }
+    
+    updateUserInfo() {
+        if (!this.currentUser) return;
+        
+        const userNameElements = ['sidebar-user-name', 'mobile-user-name'];
+        userNameElements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = this.currentUser.name;
+        });
+        
+        const userRoleElements = ['sidebar-user-role', 'mobile-user-role'];
+        userRoleElements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = this.currentUser.role;
+        });
+    }
+    
+    showNotification(message, type = 'info') {
+        const container = document.getElementById('notifications');
+        if (!container) return;
+        
+        const icons = { success: 'fa-circle-check', error: 'fa-circle-exclamation', info: 'fa-circle-info' };
+        const colors = {
+            success: 'bg-emerald-50 border-emerald-500 text-emerald-700',
+            error: 'bg-red-50 border-red-500 text-red-700',
+            info: 'bg-blue-50 border-blue-500 text-blue-700'
+        };
+        
+        const notification = document.createElement('div');
+        notification.className = `flex items-center gap-3 p-4 rounded-xl border-l-4 ${colors[type]} shadow-lg animate-slide-in`;
+        notification.innerHTML = `
+            <i class="fas ${icons[type]}"></i>
+            <span class="flex-1 text-sm font-medium">${message}</span>
+            <button onclick="this.parentElement.remove()"><i class="fas fa-xmark"></i></button>
+        `;
+        
+        container.appendChild(notification);
+        setTimeout(() => notification.remove(), 5000);
+    }
+}
+
+window.auth = new AuthSystem();
+</script>
+
+<script>
+// ============================================
+// MAIN APP - SPMB MONITORING
+// ============================================
+class SPMBApp {
+    constructor() {
+        this.currentPage = 'dashboard';
+        this.currentYear = CONFIG.DEFAULT_ACADEMIC_YEAR;
+        
+        // Data awal kosong
+        this.data = {
+            spmb: {
+                SMP: { earlybird: { pendaftar: 0, formulir: 0, dsp: 0 }, gelombang1: { pendaftar: 0, formulir: 0, dsp: 0 }, gelombang2: { pendaftar: 0, formulir: 0, dsp: 0 }, total: { pendaftar: 0, formulir: 0, dsp: 0 } },
+                SMK: { earlybird: { pendaftar: 0, formulir: 0, dsp: 0 }, gelombang1: { pendaftar: 0, formulir: 0, dsp: 0 }, gelombang2: { pendaftar: 0, formulir: 0, dsp: 0 }, total: { pendaftar: 0, formulir: 0, dsp: 0 } }
+            },
+            agenda: [],
+            photos: []
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupEventListeners();
+        window.addEventListener('auth:login', () => this.loadData());
+        
+        if (window.auth?.isAuthenticated) {
+            this.loadData();
+        }
+    }
+    
+    setupEventListeners() {
+        document.addEventListener('click', (e) => {
+            const navLink = e.target.closest('[data-page]');
+            if (navLink) {
+                e.preventDefault();
+                this.navigateTo(navLink.dataset.page);
+            }
+            
+            if (e.target.id === 'btn-save-spmb') this.saveSPMBData();
+            if (e.target.id === 'btn-save-agenda') this.saveAgendaData();
+            if (e.target.id === 'btn-save-photo') this.savePhotoData();
+        });
+        
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'academic-year-select') {
+                this.currentYear = e.target.value;
+                this.refreshData();
+            }
+        });
+    }
+    
+    async loadData() {
+        console.log('📊 Loading data from spreadsheet...');
+        
+        // RESET DATA
+        this.resetData();
+        
+        // SIMULASI DATA UNTUK TESTING - HAPUS INI KALAU SUDAH TERHUBUNG!
+        setTimeout(() => {
+            this.data.spmb.SMP = {
+                earlybird: { pendaftar: 45, formulir: 42, dsp: 38 },
+                gelombang1: { pendaftar: 52, formulir: 48, dsp: 45 },
+                gelombang2: { pendaftar: 38, formulir: 35, dsp: 32 },
+                total: { pendaftar: 135, formulir: 125, dsp: 115 }
+            };
+            this.data.spmb.SMK = {
+                earlybird: { pendaftar: 68, formulir: 62, dsp: 58 },
+                gelombang1: { pendaftar: 78, formulir: 74, dsp: 70 },
+                gelombang2: { pendaftar: 58, formulir: 54, dsp: 50 },
+                total: { pendaftar: 204, formulir: 190, dsp: 178 }
+            };
+            
+            this.refreshCurrentPage();
+            console.log('✅ Data loaded (DEMO MODE)');
+        }, 1000);
+    }
+    
+    resetData() {
+        this.data = {
+            spmb: {
+                SMP: { earlybird: { pendaftar: 0, formulir: 0, dsp: 0 }, gelombang1: { pendaftar: 0, formulir: 0, dsp: 0 }, gelombang2: { pendaftar: 0, formulir: 0, dsp: 0 }, total: { pendaftar: 0, formulir: 0, dsp: 0 } },
+                SMK: { earlybird: { pendaftar: 0, formulir: 0, dsp: 0 }, gelombang1: { pendaftar: 0, formulir: 0, dsp: 0 }, gelombang2: { pendaftar: 0, formulir: 0, dsp: 0 }, total: { pendaftar: 0, formulir: 0, dsp: 0 } }
+            },
+            agenda: [],
+            photos: []
+        };
+    }
+    
+    navigateTo(page) {
+        this.currentPage = page;
+        
+        // Update active nav
+        document.querySelectorAll('[data-page]').forEach(el => {
+            const div = el.querySelector('div');
+            if (div) {
+                div.className = 'flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white';
+            }
+        });
+        
+        const activeNav = document.getElementById(`nav-${page}`);
+        if (activeNav) {
+            activeNav.className = 'flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#f97316] text-white';
+        }
+        
+        // Close mobile sidebar
+        if (window.innerWidth < 1024) {
+            document.getElementById('sidebar')?.classList.add('-translate-x-full');
+            document.getElementById('sidebar-overlay')?.classList.add('hidden');
+        }
+        
+        this.loadPageContent(page);
+    }
+    
+    refreshCurrentPage() {
+        this.loadPageContent(this.currentPage);
+    }
+    
+    loadPageContent(page) {
+        const contentArea = document.getElementById('content-area');
+        if (!contentArea) return;
+        
+        if (page === 'dashboard') {
+            contentArea.innerHTML = this.renderDashboard();
+        } else if (page === 'spmb-smp') {
+            contentArea.innerHTML = this.renderSPMBPage('SMP');
+        } else if (page === 'spmb-smk') {
+            contentArea.innerHTML = this.renderSPMBPage('SMK');
+        } else if (page === 'input-data') {
+            contentArea.innerHTML = this.renderInputForm();
+        } else {
+            contentArea.innerHTML = this.renderDashboard();
+        }
+    }
+    
+    renderDashboard() {
+        const smp = this.data.spmb.SMP;
+        const smk = this.data.spmb.SMK;
+        const hasData = smp.total.pendaftar > 0 || smk.total.pendaftar > 0;
+        
+        return `
+            <div class="space-y-8">
+                <!-- Header -->
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-xs font-semibold text-[#f97316] bg-orange-100 px-3 py-1.5 rounded-full">
+                                <i class="fas fa-circle-nodes mr-1"></i> DASHBOARD
+                            </span>
+                            <span class="text-xs text-gray-500 bg-white px-3 py-1.5 rounded-full shadow-sm">
+                                <i class="far fa-clock mr-1"></i> ${new Date().toLocaleTimeString('id-ID')}
+                            </span>
+                        </div>
+                        <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">
+                            Monitoring <span class="gradient-text">SPMB</span>
+                        </h1>
+                        <p class="text-gray-500 text-sm mt-2">
+                            Tahun Ajaran ${this.currentYear}
+                        </p>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <select id="academic-year-select" 
+                                class="px-5 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 font-medium focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none shadow-sm">
+                            ${CONFIG.ACADEMIC_YEARS.map(year => `
+                                <option value="${year}" ${year === this.currentYear ? 'selected' : ''}>TA ${year}</option>
+                            `).join('')}
+                        </select>
+                        
+                        <button onclick="app.refreshData()" 
+                                class="px-5 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-medium hover:shadow-lg flex items-center gap-2">
+                            <i class="fas fa-rotate"></i>
+                            <span class="hidden md:inline">Refresh</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Data Cards -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- SMP Card -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+                                <i class="fas fa-school text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">SMP</h3>
+                                <p class="text-xs text-gray-500">Total Pendaftar: ${smp.total.pendaftar}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-3 mb-4">
+                            <div class="bg-gray-50 rounded-xl p-3 text-center">
+                                <p class="text-xs text-gray-500 mb-1">Early Bird</p>
+                                <p class="text-lg font-bold text-gray-900">${smp.earlybird.pendaftar}</p>
+                                <p class="text-xs text-emerald-600">DSP: ${smp.earlybird.dsp}</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-xl p-3 text-center">
+                                <p class="text-xs text-gray-500 mb-1">Gel. 1</p>
+                                <p class="text-lg font-bold text-gray-900">${smp.gelombang1.pendaftar}</p>
+                                <p class="text-xs text-emerald-600">DSP: ${smp.gelombang1.dsp}</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-xl p-3 text-center">
+                                <p class="text-xs text-gray-500 mb-1">Gel. 2</p>
+                                <p class="text-lg font-bold text-gray-900">${smp.gelombang2.pendaftar}</p>
+                                <p class="text-xs text-emerald-600">DSP: ${smp.gelombang2.dsp}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                            <span class="text-sm text-gray-600">Bayar Formulir</span>
+                            <span class="font-bold text-amber-600">${smp.total.formulir}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- SMK Card -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
+                                <i class="fas fa-graduation-cap text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">SMK</h3>
+                                <p class="text-xs text-gray-500">Total Pendaftar: ${smk.total.pendaftar}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-3 mb-4">
+                            <div class="bg-gray-50 rounded-xl p-3 text-center">
+                                <p class="text-xs text-gray-500 mb-1">Early Bird</p>
+                                <p class="text-lg font-bold text-gray-900">${smk.earlybird.pendaftar}</p>
+                                <p class="text-xs text-emerald-600">DSP: ${smk.earlybird.dsp}</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-xl p-3 text-center">
+                                <p class="text-xs text-gray-500 mb-1">Gel. 1</p>
+                                <p class="text-lg font-bold text-gray-900">${smk.gelombang1.pendaftar}</p>
+                                <p class="text-xs text-emerald-600">DSP: ${smk.gelombang1.dsp}</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-xl p-3 text-center">
+                                <p class="text-xs text-gray-500 mb-1">Gel. 2</p>
+                                <p class="text-lg font-bold text-gray-900">${smk.gelombang2.pendaftar}</p>
+                                <p class="text-xs text-emerald-600">DSP: ${smk.gelombang2.dsp}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                            <span class="text-sm text-gray-600">Bayar Formulir</span>
+                            <span class="font-bold text-amber-600">${smk.total.formulir}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                ${!hasData ? `
+                <div class="bg-amber-50 border border-amber-200 rounded-3xl p-8 text-center">
+                    <div class="w-20 h-20 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-database text-amber-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-gray-900 text-lg font-semibold mb-2">Belum Ada Data</h3>
+                    <p class="text-gray-500 text-sm mb-4">Spreadsheet masih kosong untuk TA ${this.currentYear}</p>
+                    <button onclick="app.navigateTo('input-data')" 
+                            class="px-6 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-medium hover:shadow-lg inline-flex items-center gap-2">
+                        <i class="fas fa-plus-circle"></i>
+                        Input Data Sekarang
+                    </button>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }
+    
+    renderSPMBPage(unit) {
+        const data = this.data.spmb[unit];
+        
+        return `
+            <div class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">SPMB ${unit}</h1>
+                        <p class="text-gray-500 text-sm mt-1">Tahun Ajaran ${this.currentYear}</p>
+                    </div>
+                    <button onclick="app.navigateTo('input-data')" 
+                            class="px-6 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-medium hover:shadow-lg flex items-center gap-2">
+                        <i class="fas fa-plus-circle"></i>
+                        Input Data
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div class="bg-white rounded-2xl p-5 border border-emerald-200 shadow-sm">
+                        <h4 class="font-semibold text-gray-900 mb-3">Early Bird</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Pendaftar:</span>
+                                <span class="font-bold">${data.earlybird.pendaftar}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Formulir:</span>
+                                <span class="font-bold text-amber-600">${data.earlybird.formulir}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">DSP:</span>
+                                <span class="font-bold text-emerald-600">${data.earlybird.dsp}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-5 border border-blue-200 shadow-sm">
+                        <h4 class="font-semibold text-gray-900 mb-3">Gelombang 1</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Pendaftar:</span>
+                                <span class="font-bold">${data.gelombang1.pendaftar}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Formulir:</span>
+                                <span class="font-bold text-amber-600">${data.gelombang1.formulir}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">DSP:</span>
+                                <span class="font-bold text-emerald-600">${data.gelombang1.dsp}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-5 border border-purple-200 shadow-sm">
+                        <h4 class="font-semibold text-gray-900 mb-3">Gelombang 2</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Pendaftar:</span>
+                                <span class="font-bold">${data.gelombang2.pendaftar}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Formulir:</span>
+                                <span class="font-bold text-amber-600">${data.gelombang2.formulir}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">DSP:</span>
+                                <span class="font-bold text-emerald-600">${data.gelombang2.dsp}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    renderInputForm() {
+        const today = new Date().toISOString().split('T')[0];
+        
+        return `
+            <div class="max-w-3xl mx-auto space-y-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Input Data Baru</h1>
+                    <p class="text-gray-500 text-sm mt-1">Data akan langsung tersimpan ke Google Spreadsheet</p>
+                </div>
+                
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex gap-2 border-b border-gray-200 pb-4 mb-6">
+                        <button onclick="app.switchTab('spmb')" id="tab-spmb" 
+                                class="px-5 py-2.5 rounded-xl bg-[#f97316] text-white font-medium flex items-center gap-2">
+                            <i class="fas fa-users"></i> Data SPMB
+                        </button>
+                        <button onclick="app.switchTab('agenda')" id="tab-agenda" 
+                                class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:border-[#f97316] flex items-center gap-2">
+                            <i class="fas fa-calendar"></i> Agenda
+                        </button>
+                        <button onclick="app.switchTab('photo')" id="tab-photo" 
+                                class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:border-[#f97316] flex items-center gap-2">
+                            <i class="fas fa-camera"></i> Foto
+                        </button>
+                    </div>
+                    
+                    <!-- Form SPMB -->
+                    <div id="form-spmb">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Form Input SPMB</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Unit</label>
+                                <select id="input-unit" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                                    <option value="SMP">SMP</option>
+                                    <option value="SMK">SMK</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tahun Ajaran</label>
+                                <select id="input-tahun-ajaran" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                                    ${CONFIG.ACADEMIC_YEARS.map(year => `<option value="${year}" ${year === this.currentYear ? 'selected' : ''}>${year}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Periode</label>
+                                <select id="input-periode" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                                    <option value="earlybird">Early Bird</option>
+                                    <option value="gelombang1">Gelombang 1</option>
+                                    <option value="gelombang2">Gelombang 2</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Input</label>
+                                <input type="date" id="input-tanggal" value="${today}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah Pendaftar</label>
+                                <input type="number" id="input-pendaftar" min="0" placeholder="0" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Bayar Formulir</label>
+                                <input type="number" id="input-formulir" min="0" placeholder="0" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Bayar DSP</label>
+                                <input type="number" id="input-dsp" min="0" placeholder="0" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
+                                <textarea id="input-keterangan" rows="3" placeholder="Contoh: Pendaftar jalur reguler" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button id="btn-save-spmb" class="px-6 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-medium hover:shadow-lg flex items-center gap-2">
+                                <i class="fas fa-save"></i> Simpan ke Spreadsheet
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Agenda (Hidden) -->
+                    <div id="form-agenda" class="hidden">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Form Input Agenda</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
+                                <input type="date" id="agenda-tanggal" value="${today}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
+                                <select id="agenda-kategori" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                                    <option>Meeting</option><option>Event</option><option>Workshop</option><option>Open House</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Kegiatan</label>
+                                <input type="text" id="agenda-kegiatan" placeholder="Contoh: Open House SMP" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Lokasi</label>
+                                <input type="text" id="agenda-lokasi" placeholder="Aula Utama" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Penanggung Jawab</label>
+                                <input type="text" id="agenda-pj" value="${window.auth?.currentUser?.name || ''}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
+                                <textarea id="agenda-deskripsi" rows="3" placeholder="Deskripsi kegiatan..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button id="btn-save-agenda" class="px-6 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-medium hover:shadow-lg flex items-center gap-2">
+                                <i class="fas fa-save"></i> Simpan Agenda
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Foto (Hidden) -->
+                    <div id="form-photo" class="hidden">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Form Upload Foto</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
+                                <input type="date" id="photo-tanggal" value="${today}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Kegiatan</label>
+                                <input type="text" id="photo-kegiatan" placeholder="Nama kegiatan" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">URL Foto</label>
+                                <input type="url" id="photo-url" placeholder="https://example.com/foto.jpg" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
+                                <textarea id="photo-deskripsi" rows="2" placeholder="Deskripsi foto..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button id="btn-save-photo" class="px-6 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-medium hover:shadow-lg flex items-center gap-2">
+                                <i class="fas fa-upload"></i> Upload Foto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    switchTab(tab) {
+        const tabs = ['spmb', 'agenda', 'photo'];
+        tabs.forEach(t => {
+            const btn = document.getElementById(`tab-${t}`);
+            const form = document.getElementById(`form-${t}`);
+            if (t === tab) {
+                if (btn) btn.className = 'px-5 py-2.5 rounded-xl bg-[#f97316] text-white font-medium flex items-center gap-2';
+                if (form) form.classList.remove('hidden');
+            } else {
+                if (btn) btn.className = 'px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:border-[#f97316] flex items-center gap-2';
+                if (form) form.classList.add('hidden');
+            }
+        });
+    }
+    
+    async saveSPMBData() {
+        this.showNotification('✅ Data berhasil disimpan (Demo Mode)', 'success');
+        setTimeout(() => this.loadData(), 1000);
+    }
+    
+    async saveAgendaData() {
+        this.showNotification('✅ Agenda berhasil disimpan (Demo Mode)', 'success');
+    }
+    
+    async savePhotoData() {
+        this.showNotification('✅ Foto berhasil disimpan (Demo Mode)', 'success');
+    }
+    
+    showNotification(message, type = 'info') {
+        if (window.auth) window.auth.showNotification(message, type);
+    }
+    
+    refreshData() {
+        this.showNotification('🔄 Menyegarkan data...', 'info');
+        this.loadData();
+    }
+    
+    handleLogout() {
+        window.auth?.handleLogout();
+    }
+}
+
+window.app = new SPMBApp();
+</script>
+
+<script>
+// ============================================
+// GLOBAL FUNCTIONS
+// ============================================
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    sidebar?.classList.toggle('-translate-x-full');
+    overlay?.classList.toggle('hidden');
+}
+
+function closeSuccessModal() {
+    document.getElementById('success-modal')?.classList.add('hidden');
+}
+
+function closeErrorModal() {
+    document.getElementById('error-modal')?.classList.add('hidden');
+}
+
+// Loading animation
+document.addEventListener('DOMContentLoaded', function() {
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 2;
+        document.getElementById('loading-progress').style.width = progress + '%';
+        if (progress >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                }, 500);
+            }, 300);
+        }
+    }, 30);
+});
+</script>
+
+<!-- NO FOOTER - SESUAI PERMINTAAN -->
+
 </body>
 </html>
