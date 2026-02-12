@@ -1,49 +1,51 @@
-// Main Application Controller - FIXED FOR DATA INPUT
+// ============================================
+// MAIN APPLICATION - TERINTEGRASI DENGAN SPREADSHEET
+// ============================================
 
-class DashboardApp {
+class SPMBApp {
     constructor() {
         this.currentPage = 'dashboard';
-        this.data = null;
-        this.isLoading = false;
+        this.currentYear = CONFIG.DEFAULT_ACADEMIC_YEAR;
+        this.data = {
+            spmb: [],
+            agenda: [],
+            photos: []
+        };
         this.charts = {};
+        this.isLoading = false;
         
         this.init();
     }
     
     init() {
-        this.setupNavigation();
+        // Setup event listeners
         this.setupEventListeners();
         
-        // Test API connection on startup
-        this.testAPI();
-    }
-    
-    setupNavigation() {
-        // Navigation click handlers
-        document.addEventListener('click', (e) => {
-            const navItem = e.target.closest('.nav-item');
-            if (navItem && !e.target.closest('.btn')) {
-                e.preventDefault();
-                const page = navItem.dataset.page;
-                
-                // Check permissions
-                if (!this.checkPagePermission(page)) {
-                    return;
-                }
-                
-                this.navigateTo(page);
-            }
-            
-            // Tab switching in forms
-            if (e.target.classList.contains('tab-btn')) {
-                this.switchFormTab(e.target.dataset.tab);
-            }
-        });
+        // Listen for auth events
+        window.addEventListener('auth:login', () => this.loadData());
+        
+        // Load data if already authenticated
+        if (window.auth && window.auth.isAuthenticated) {
+            this.loadData();
+        }
     }
     
     setupEventListeners() {
-        // Form submission
+        // Navigation
         document.addEventListener('click', (e) => {
+            const navLink = e.target.closest('[data-page]');
+            if (navLink) {
+                e.preventDefault();
+                const page = navLink.dataset.page;
+                this.navigateTo(page);
+            }
+            
+            // Tab switching
+            if (e.target.classList.contains('tab-btn')) {
+                this.switchTab(e.target.dataset.tab);
+            }
+            
+            // Save buttons
             if (e.target.id === 'btn-save-spmb') {
                 this.saveSPMBData();
             }
@@ -53,158 +55,19 @@ class DashboardApp {
             if (e.target.id === 'btn-save-photo') {
                 this.savePhotoData();
             }
-            if (e.target.id === 'btn-test-api') {
-                this.testAPI();
-            }
-            if (e.target.id === 'btn-refresh-data') {
-                this.loadData();
-            }
-        });
-    }
-    
-    checkPagePermission(page) {
-        const permissions = {
-            'dashboard': { role: 'user', unit: null },
-            'spmb-smp': { role: 'coordinator', unit: 'smp' },
-            'spmb-smk': { role: 'coordinator', unit: 'smk' },
-            'input-data': { role: 'coordinator', unit: null },
-            'settings': { role: 'admin', unit: null }
-        };
-        
-        const required = permissions[page] || { role: 'user', unit: null };
-        
-        if (!window.auth.hasPermission(required.role, required.unit)) {
-            window.auth.showNotification('Anda tidak memiliki akses ke halaman ini', 'error');
-            return false;
-        }
-        
-        return true;
-    }
-    
-    navigateTo(page) {
-        this.currentPage = page;
-        
-        // Update active nav item
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-            if (item.dataset.page === page) {
-                item.classList.add('active');
-            }
         });
         
-        // Update content header
-        this.updateContentHeader(page);
-        
-        // Load page content
-        this.loadPageContent(page);
-        
-        // Close mobile menu if open
-        document.getElementById('sidebar').classList.remove('active');
-    }
-    
-    updateContentHeader(page) {
-        const header = document.getElementById('content-header');
-        const titles = {
-            'dashboard': 'Dashboard Overview',
-            'spmb-smp': 'Monitoring SPMB SMP',
-            'spmb-smk': 'Monitoring SPMB SMK',
-            'agenda': 'Kalender Agenda',
-            'agenda-list': 'Daftar Kegiatan',
-            'input-data': 'Input Data Baru',
-            'gallery': 'Gallery Foto Kegiatan',
-            'settings': 'Pengaturan Sistem'
-        };
-        
-        const descriptions = {
-            'dashboard': 'Ringkasan data SPMB dan Agenda Humas',
-            'spmb-smp': 'Data penerimaan siswa SMP',
-            'spmb-smk': 'Data penerimaan siswa SMK',
-            'input-data': 'Tambah data SPMB, Agenda, atau Foto'
-        };
-        
-        header.innerHTML = `
-            <h2>${titles[page] || page}</h2>
-            <p>${descriptions[page] || ''}</p>
-        `;
-    }
-    
-    async loadPageContent(page) {
-        const contentBody = document.getElementById('content-body');
-        
-        // Show loading
-        contentBody.innerHTML = '<div class="loading">Memuat...</div>';
-        
-        // Load data if not loaded
-        if (!this.data) {
-            await this.loadData();
-        }
-        
-        // Render page content
-        switch(page) {
-            case 'dashboard':
-                contentBody.innerHTML = this.renderDashboard();
-                this.initDashboardCharts();
-                break;
-                
-            case 'spmb-smp':
-                contentBody.innerHTML = this.renderSPMBPage('SMP');
-                this.initSPMBCharts('SMP');
-                break;
-                
-            case 'spmb-smk':
-                contentBody.innerHTML = this.renderSPMBPage('SMK');
-                this.initSPMBCharts('SMK');
-                break;
-                
-            case 'input-data':
-                contentBody.innerHTML = this.renderInputForm();
-                break;
-                
-            case 'agenda-list':
-                contentBody.innerHTML = this.renderAgendaList();
-                break;
-                
-            case 'gallery':
-                contentBody.innerHTML = this.renderGallery();
-                break;
-                
-            case 'settings':
-                contentBody.innerHTML = this.renderSettings();
-                break;
-                
-            default:
-                contentBody.innerHTML = '<p>Halaman tidak ditemukan</p>';
-        }
-    }
-    
-    async loadData() {
-        this.isLoading = true;
-        
-        try {
-            // Try to fetch from Google Sheets API
-            const apiData = await this.fetchFromAPI('getAll');
-            
-            if (apiData && apiData.success) {
-                this.data = apiData.data;
-                console.log('Data loaded from API:', this.data);
-            } else {
-                // Fallback to mock data
-                this.data = this.getMockData();
-                console.log('Using mock data');
+        // Academic year change
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'academic-year-select') {
+                this.currentYear = e.target.value;
+                this.refreshData();
             }
-            
-        } catch (error) {
-            console.error('Error loading data:', error);
-            this.data = this.getMockData();
-            window.auth.showNotification('Menggunakan data contoh', 'warning');
-        }
-        
-        this.isLoading = false;
-        return this.data;
+        });
     }
     
     // ============================================
-    // API FUNCTIONS - FIXED FOR DATA INPUT
+    // API FUNCTIONS - KONEKSI KE GOOGLE SPREADSHEET
     // ============================================
     
     async fetchFromAPI(action, params = {}) {
@@ -212,15 +75,14 @@ class DashboardApp {
             const url = new URL(CONFIG.WEB_APP_URL);
             url.searchParams.append('action', action);
             
-            // Add all params
             Object.keys(params).forEach(key => {
                 url.searchParams.append(key, params[key]);
             });
             
-            // Add cache busting
+            // Cache busting
             url.searchParams.append('_', Date.now());
             
-            console.log('Fetching from:', url.toString());
+            console.log(`Fetching from API: ${action}`, params);
             
             const response = await fetch(url.toString(), {
                 method: 'GET',
@@ -232,1063 +94,1066 @@ class DashboardApp {
             });
             
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                throw new Error(`HTTP ${response.status}`);
             }
             
             const data = await response.json();
-            console.log('API Response:', data);
-            
             return data;
             
         } catch (error) {
-            console.error('API Error:', error);
+            console.error('API Fetch Error:', error);
             throw error;
         }
     }
     
     async saveToAPI(sheetName, data) {
         try {
-            console.log('Saving to API:', { sheetName, data });
-            
-            const payload = {
-                action: 'save',
-                sheet: sheetName,
-                data: data
-            };
-            
-            // For debugging
-            console.log('Payload:', JSON.stringify(payload, null, 2));
+            console.log(`Saving to ${sheetName}:`, data);
             
             const response = await fetch(CONFIG.WEB_APP_URL, {
                 method: 'POST',
                 mode: 'no-cors', // Google Apps Script requires no-cors for POST
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    action: 'save',
+                    sheet: sheetName,
+                    data: {
+                        ...data,
+                        id: Date.now(),
+                        created_at: new Date().toISOString(),
+                        created_by: window.auth?.currentUser?.name || 'Unknown'
+                    }
+                })
             });
             
-            console.log('Save response:', response);
+            // Karena mode no-cors, kita asumsikan sukses
+            this.showNotification('Data berhasil dikirim ke spreadsheet', 'success');
             
-            // With no-cors mode, we can't read the response
-            // Assume success if no error
-            window.auth.showNotification('Data berhasil dikirim ke server', 'success');
+            // Trigger refresh setelah save
+            setTimeout(() => this.loadData(), 1000);
             
-            // Try to get confirmation via GET
-            setTimeout(async () => {
-                try {
-                    const verify = await this.fetchFromAPI('getSheet', { sheet: sheetName });
-                    if (verify.success) {
-                        window.auth.showNotification('Data berhasil disimpan di spreadsheet', 'success');
-                    }
-                } catch (e) {
-                    console.log('Verification skipped:', e);
-                }
-            }, 1000);
-            
-            return { success: true, message: 'Data sedang diproses' };
+            return { success: true };
             
         } catch (error) {
-            console.error('Save Error:', error);
-            
-            // Fallback: Save to localStorage for demo
-            this.saveToLocalStorage(sheetName, data);
-            
-            window.auth.showNotification('Data disimpan secara lokal (demo mode)', 'warning');
-            return { success: true, message: 'Data disimpan secara lokal' };
+            console.error('API Save Error:', error);
+            this.showNotification('Gagal menyimpan data ke spreadsheet', 'error');
+            return { success: false, error };
         }
     }
     
-    saveToLocalStorage(sheetName, data) {
+    async testConnection() {
         try {
-            const key = `spmb_${sheetName}`;
-            let existing = JSON.parse(localStorage.getItem(key)) || [];
-            
-            // Add ID and timestamp
-            const newData = {
-                ...data,
-                id: Date.now(),
-                created_at: new Date().toISOString(),
-                saved_locally: true
-            };
-            
-            existing.push(newData);
-            localStorage.setItem(key, JSON.stringify(existing));
-            
-            console.log('Saved to localStorage:', newData);
-            return true;
-            
-        } catch (error) {
-            console.error('LocalStorage save error:', error);
-            return false;
-        }
-    }
-    
-    async testAPI() {
-        try {
-            window.auth.showNotification('Menguji koneksi API...', 'info');
+            this.showNotification('Menguji koneksi ke spreadsheet...', 'info');
             
             const result = await this.fetchFromAPI('test');
             
-            if (result.success) {
-                window.auth.showNotification('✅ Koneksi API berhasil!', 'success');
+            if (result && result.success) {
+                this.showNotification('✅ Koneksi berhasil! Spreadsheet terhubung.', 'success');
                 return true;
             } else {
-                window.auth.showNotification('❌ API tidak merespon dengan benar', 'error');
+                this.showNotification('❌ Koneksi gagal. Periksa Web App URL.', 'error');
                 return false;
             }
-            
         } catch (error) {
-            console.error('API Test failed:', error);
-            
-            // Check if it's a CORS error
-            if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
-                window.auth.showNotification('⚠️ CORS Error: Coba deploy ulang Google Apps Script dengan "Anyone" access', 'warning');
-            } else {
-                window.auth.showNotification('❌ Tidak dapat terhubung ke API', 'error');
-            }
-            
+            this.showNotification('❌ Tidak dapat terhubung ke API', 'error');
             return false;
         }
     }
     
     // ============================================
-    // RENDER FUNCTIONS
+    // DATA MANAGEMENT - DARI SPREADSHEET
     // ============================================
     
-    renderDashboard() {
-        const stats = this.calculateStats();
+    async loadData() {
+        if (this.isLoading) return;
         
-        return `
-            <div class="stats-grid">
-                <div class="stat-card smp">
-                    <h3><i class="fas fa-school"></i> SMP</h3>
-                    <div class="stat-value">${stats.smp.total}</div>
-                    <div class="stat-label">Total Penerimaan</div>
-                    <div class="stat-change">
-                        ${stats.smp.monthly} siswa bulan ini
-                    </div>
-                </div>
-                
-                <div class="stat-card smk">
-                    <h3><i class="fas fa-graduation-cap"></i> SMK</h3>
-                    <div class="stat-value">${stats.smk.total}</div>
-                    <div class="stat-label">Total Penerimaan</div>
-                    <div class="stat-change">
-                        ${stats.smk.monthly} siswa bulan ini
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <h3><i class="fas fa-calendar-check"></i> Agenda</h3>
-                    <div class="stat-value">${stats.agenda.total}</div>
-                    <div class="stat-label">Kegiatan Bulan Ini</div>
-                    <div class="stat-change">
-                        ${stats.agenda.completed} selesai
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <h3><i class="fas fa-images"></i> Foto</h3>
-                    <div class="stat-value">${stats.photos.total}</div>
-                    <div class="stat-label">Foto Kegiatan</div>
-                    <div class="stat-change">
-                        ${stats.photos.recent} baru
-                    </div>
-                </div>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
-                <div style="background: white; padding: 20px; border-radius: 10px;">
-                    <h3><i class="fas fa-chart-line"></i> Trend Penerimaan</h3>
-                    <canvas id="trend-chart" height="250"></canvas>
-                </div>
-                
-                <div style="background: white; padding: 20px; border-radius: 10px;">
-                    <h3><i class="fas fa-tasks"></i> Status Agenda</h3>
-                    <canvas id="status-chart" height="250"></canvas>
-                </div>
-            </div>
-            
-            <div style="margin-top: 30px;">
-                <button class="btn btn-primary" onclick="app.loadData()">
-                    <i class="fas fa-sync"></i> Refresh Data
-                </button>
-                <button class="btn btn-secondary" onclick="app.testAPI()" style="margin-left: 10px;">
-                    <i class="fas fa-wifi"></i> Test Koneksi
-                </button>
-            </div>
-        `;
-    }
-    
-    renderSPMBPage(unit) {
-        const data = this.data?.spmbSMP || this.data?.spmbSMK;
-        const color = unit === 'SMP' ? CONFIG.THEME.COLORS.smp : CONFIG.THEME.COLORS.smk;
+        this.isLoading = true;
+        this.showLoading(true);
         
-        return `
-            <div style="margin-bottom: 30px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="color: ${color};">Data Penerimaan ${unit} ${CONFIG.APP.YEAR}</h3>
-                    <button class="btn btn-primary" onclick="app.navigateTo('input-data')">
-                        <i class="fas fa-plus"></i> Tambah Data
-                    </button>
-                </div>
-                
-                <div style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px;">
-                    <canvas id="spmb-chart" height="300"></canvas>
-                </div>
-                
-                <div style="background: white; border-radius: 10px; margin-top: 20px; overflow: hidden;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Bulan</th>
-                                <th>Target</th>
-                                <th>Realisasi</th>
-                                <th>Selisih</th>
-                                <th>Pencapaian</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${this.renderMonthlyTable(unit)}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    }
-    
-    renderInputForm() {
-        return `
-            <div class="form-container">
-                <div class="form-tabs">
-                    <button class="tab-btn active" data-tab="spmb">
-                        <i class="fas fa-users"></i> Data SPMB
-                    </button>
-                    <button class="tab-btn" data-tab="agenda">
-                        <i class="fas fa-calendar"></i> Agenda
-                    </button>
-                    <button class="tab-btn" data-tab="photo">
-                        <i class="fas fa-camera"></i> Foto
-                    </button>
-                </div>
-                
-                <!-- SPMB Form -->
-                <div id="form-spmb" class="form-content active">
-                    <h3><i class="fas fa-school"></i> Input Data Penerimaan</h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label><i class="fas fa-university"></i> Unit</label>
-                            <select id="input-unit" class="form-control">
-                                <option value="SMP">SMP</option>
-                                <option value="SMK">SMK</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar"></i> Bulan</label>
-                            <select id="input-bulan" class="form-control">
-                                ${CONFIG.APP.MONTHS.map((month, index) => `
-                                    <option value="${index + 1}">${month}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar-alt"></i> Tahun</label>
-                            <input type="number" id="input-tahun" class="form-control" 
-                                   value="${CONFIG.APP.YEAR}" min="2020" max="2030">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label><i class="fas fa-user-graduate"></i> Jumlah Siswa</label>
-                            <input type="number" id="input-jumlah" class="form-control" 
-                                   placeholder="Masukkan jumlah siswa" min="1" max="1000">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label><i class="fas fa-sticky-note"></i> Keterangan</label>
-                        <textarea id="input-keterangan" class="form-control" rows="3" 
-                                  placeholder="Contoh: Penerimaan jalur reguler, etc."></textarea>
-                    </div>
-                    
-                    <button id="btn-save-spmb" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Simpan Data SPMB
-                    </button>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                        <p><i class="fas fa-info-circle"></i> <strong>Catatan:</strong></p>
-                        <p style="font-size: 14px;">Data akan disimpan ke Google Spreadsheet. Pastikan koneksi internet aktif.</p>
-                    </div>
-                </div>
-                
-                <!-- Agenda Form -->
-                <div id="form-agenda" class="form-content">
-                    <h3><i class="fas fa-calendar-alt"></i> Input Agenda Kegiatan</h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar-day"></i> Tanggal</label>
-                            <input type="date" id="agenda-tanggal" class="form-control" 
-                                   value="${new Date().toISOString().split('T')[0]}">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label><i class="fas fa-tasks"></i> Kategori</label>
-                            <select id="agenda-kategori" class="form-control">
-                                ${CONFIG.AGENDA_CATEGORIES.map(cat => `
-                                    <option value="${cat}">${cat}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label><i class="fas fa-bullhorn"></i> Nama Kegiatan</label>
-                        <input type="text" id="agenda-kegiatan" class="form-control" 
-                               placeholder="Contoh: Open House SMP, Workshop Teknologi">
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label><i class="fas fa-map-marker-alt"></i> Lokasi</label>
-                            <input type="text" id="agenda-lokasi" class="form-control" 
-                                   placeholder="Contoh: Aula Utama, Lab Komputer">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label><i class="fas fa-user-tie"></i> Penanggung Jawab</label>
-                            <input type="text" id="agenda-pj" class="form-control" 
-                                   value="${window.auth.currentUser?.name || ''}">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label><i class="fas fa-list-alt"></i> Deskripsi</label>
-                        <textarea id="agenda-deskripsi" class="form-control" rows="3" 
-                                  placeholder="Deskripsi lengkap kegiatan..."></textarea>
-                    </div>
-                    
-                    <button id="btn-save-agenda" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Simpan Agenda
-                    </button>
-                </div>
-                
-                <!-- Photo Form -->
-                <div id="form-photo" class="form-content">
-                    <h3><i class="fas fa-camera"></i> Upload Link Foto</h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar-day"></i> Tanggal Foto</label>
-                            <input type="date" id="photo-tanggal" class="form-control" 
-                                   value="${new Date().toISOString().split('T')[0]}">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label><i class="fas fa-camera-retro"></i> Kegiatan</label>
-                            <input type="text" id="photo-kegiatan" class="form-control" 
-                                   placeholder="Nama kegiatan yang difoto">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label><i class="fas fa-link"></i> URL Foto</label>
-                        <input type="url" id="photo-url" class="form-control" 
-                               placeholder="https://example.com/foto.jpg">
-                        <small style="color: #666;">Gunakan link dari Google Drive, Imgur, atau hosting lainnya</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label><i class="fas fa-comment-alt"></i> Deskripsi Foto</label>
-                        <textarea id="photo-deskripsi" class="form-control" rows="2" 
-                                  placeholder="Deskripsi singkat foto..."></textarea>
-                    </div>
-                    
-                    <button id="btn-save-photo" class="btn btn-primary">
-                        <i class="fas fa-upload"></i> Simpan Foto
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-    
-    // ============================================
-    // DATA INPUT HANDLERS - FIXED
-    // ============================================
-    
-    async saveSPMBData() {
         try {
-            // Get form values
-            const unit = document.getElementById('input-unit').value;
-            const bulan = document.getElementById('input-bulan').value;
-            const tahun = document.getElementById('input-tahun').value;
-            const jumlah = document.getElementById('input-jumlah').value;
-            const keterangan = document.getElementById('input-keterangan').value;
+            // Ambil semua data dari spreadsheet
+            const response = await this.fetchFromAPI('getAll');
             
-            // Validation
-            if (!unit || !bulan || !tahun || !jumlah) {
-                window.auth.showNotification('Semua field harus diisi', 'error');
-                return;
-            }
-            
-            if (parseInt(jumlah) <= 0) {
-                window.auth.showNotification('Jumlah siswa harus lebih dari 0', 'error');
-                return;
-            }
-            
-            // Prepare data for Google Sheets
-            const rowData = {
-                unit: unit,
-                bulan: parseInt(bulan),
-                tahun: parseInt(tahun),
-                jumlah_siswa: parseInt(jumlah),
-                keterangan: keterangan || '',
-                tanggal_input: new Date().toISOString().split('T')[0],
-                input_by: window.auth.currentUser?.name || 'Unknown'
-            };
-            
-            console.log('Saving SPMB data:', rowData);
-            
-            // Determine sheet name
-            const sheetName = unit === 'SMP' ? CONFIG.SHEETS.SPMB_SMP : CONFIG.SHEETS.SPMB_SMK;
-            
-            // Show loading
-            window.auth.showNotification('Menyimpan data...', 'info');
-            
-            // Save to API
-            const result = await this.saveToAPI(sheetName, rowData);
-            
-            if (result.success) {
-                // Clear form
-                document.getElementById('input-jumlah').value = '';
-                document.getElementById('input-keterangan').value = '';
+            if (response && response.success && response.data) {
+                // Proses data SPMB
+                this.data.spmb = this.processSPMBData(response.data.spmb_smp || [], response.data.spmb_smk || []);
                 
-                // Reload data
-                await this.loadData();
+                // Proses data Agenda
+                this.data.agenda = response.data.agenda_humas || [];
                 
-                // Navigate to appropriate page
-                this.navigateTo(unit === 'SMP' ? 'spmb-smp' : 'spmb-smk');
+                // Proses data Foto
+                this.data.photos = response.data.foto_kegiatan || [];
                 
+                console.log('Data loaded from spreadsheet:', this.data);
+                this.showNotification('Data berhasil dimuat dari spreadsheet', 'success');
             } else {
-                throw new Error(result.error || 'Gagal menyimpan');
+                // Fallback ke mock data jika API gagal
+                this.loadMockData();
+                this.showNotification('Menggunakan data contoh (spreadsheet tidak terhubung)', 'warning');
             }
             
         } catch (error) {
-            console.error('Save SPMB error:', error);
-            window.auth.showNotification(`Error: ${error.message}`, 'error');
+            console.error('Error loading data:', error);
+            this.loadMockData();
+            this.showNotification('Gagal memuat data dari spreadsheet', 'error');
         }
+        
+        // Refresh current page
+        this.refreshCurrentPage();
+        
+        this.isLoading = false;
+        this.showLoading(false);
     }
     
-    async saveAgendaData() {
-        try {
-            // Get form values
-            const tanggal = document.getElementById('agenda-tanggal').value;
-            const kegiatan = document.getElementById('agenda-kegiatan').value;
-            const lokasi = document.getElementById('agenda-lokasi').value;
-            const kategori = document.getElementById('agenda-kategori').value;
-            const pj = document.getElementById('agenda-pj').value;
-            const deskripsi = document.getElementById('agenda-deskripsi').value;
-            
-            // Validation
-            if (!tanggal || !kegiatan || !lokasi || !pj) {
-                window.auth.showNotification('Field wajib harus diisi', 'error');
-                return;
+    processSPMBData(smpData = [], smkData = []) {
+        // Gabungkan data SMP dan SMK
+        const allData = [...smpData, ...smkData];
+        
+        // Filter berdasarkan tahun ajaran yang dipilih
+        const filteredData = allData.filter(item => 
+            item.tahun_ajaran === this.currentYear
+        );
+        
+        // Kelompokkan berdasarkan unit dan periode
+        const result = {
+            SMP: {
+                earlybird: { pendaftar: 0, formulir: 0, dsp: 0 },
+                gelombang1: { pendaftar: 0, formulir: 0, dsp: 0 },
+                gelombang2: { pendaftar: 0, formulir: 0, dsp: 0 },
+                total: { pendaftar: 0, formulir: 0, dsp: 0 }
+            },
+            SMK: {
+                earlybird: { pendaftar: 0, formulir: 0, dsp: 0 },
+                gelombang1: { pendaftar: 0, formulir: 0, dsp: 0 },
+                gelombang2: { pendaftar: 0, formulir: 0, dsp: 0 },
+                total: { pendaftar: 0, formulir: 0, dsp: 0 }
             }
+        };
+        
+        // Hitung total per kategori
+        filteredData.forEach(item => {
+            const unit = item.unit;
+            const periode = item.periode;
+            const pendaftar = parseInt(item.jumlah_pendaftar) || 0;
+            const formulir = parseInt(item.jumlah_bayar_formulir) || 0;
+            const dsp = parseInt(item.jumlah_bayar_dsp) || 0;
             
-            // Prepare data
-            const rowData = {
-                tanggal: tanggal,
-                kegiatan: kegiatan,
-                lokasi: lokasi,
-                kategori: kategori,
-                status: 'scheduled', // default status
-                penanggung_jawab: pj,
-                deskripsi: deskripsi || '',
-                created_at: new Date().toISOString()
-            };
-            
-            console.log('Saving Agenda data:', rowData);
-            
-            // Show loading
-            window.auth.showNotification('Menyimpan agenda...', 'info');
-            
-            // Save to API
-            const result = await this.saveToAPI(CONFIG.SHEETS.AGENDA, rowData);
-            
-            if (result.success) {
-                // Clear form
-                document.getElementById('agenda-kegiatan').value = '';
-                document.getElementById('agenda-lokasi').value = '';
-                document.getElementById('agenda-deskripsi').value = '';
+            if (result[unit] && result[unit][periode]) {
+                result[unit][periode].pendaftar += pendaftar;
+                result[unit][periode].formulir += formulir;
+                result[unit][periode].dsp += dsp;
                 
-                // Reload data
-                await this.loadData();
-                
-                window.auth.showNotification('Agenda berhasil disimpan', 'success');
-                
-            } else {
-                throw new Error(result.error || 'Gagal menyimpan');
-            }
-            
-        } catch (error) {
-            console.error('Save Agenda error:', error);
-            window.auth.showNotification(`Error: ${error.message}`, 'error');
-        }
-    }
-    
-    async savePhotoData() {
-        try {
-            // Get form values
-            const tanggal = document.getElementById('photo-tanggal').value;
-            const kegiatan = document.getElementById('photo-kegiatan').value;
-            const url = document.getElementById('photo-url').value;
-            const deskripsi = document.getElementById('photo-deskripsi').value;
-            
-            // Validation
-            if (!tanggal || !kegiatan || !url) {
-                window.auth.showNotification('Field wajib harus diisi', 'error');
-                return;
-            }
-            
-            // URL validation
-            try {
-                new URL(url);
-            } catch {
-                window.auth.showNotification('URL tidak valid', 'error');
-                return;
-            }
-            
-            // Prepare data
-            const rowData = {
-                tanggal: tanggal,
-                kegiatan: kegiatan,
-                url: url,
-                deskripsi: deskripsi || '',
-                uploaded_by: window.auth.currentUser?.name || 'Unknown',
-                uploaded_at: new Date().toISOString()
-            };
-            
-            console.log('Saving Photo data:', rowData);
-            
-            // Show loading
-            window.auth.showNotification('Menyimpan foto...', 'info');
-            
-            // Save to API
-            const result = await this.saveToAPI(CONFIG.SHEETS.FOTO, rowData);
-            
-            if (result.success) {
-                // Clear form
-                document.getElementById('photo-kegiatan').value = '';
-                document.getElementById('photo-url').value = '';
-                document.getElementById('photo-deskripsi').value = '';
-                
-                // Reload data
-                await this.loadData();
-                
-                window.auth.showNotification('Foto berhasil disimpan', 'success');
-                
-            } else {
-                throw new Error(result.error || 'Gagal menyimpan');
-            }
-            
-        } catch (error) {
-            console.error('Save Photo error:', error);
-            window.auth.showNotification(`Error: ${error.message}`, 'error');
-        }
-    }
-    
-    // ============================================
-    // HELPER FUNCTIONS
-    // ============================================
-    
-    switchFormTab(tabName) {
-        // Update active tab
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.tab === tabName) {
-                btn.classList.add('active');
+                result[unit].total.pendaftar += pendaftar;
+                result[unit].total.formulir += formulir;
+                result[unit].total.dsp += dsp;
             }
         });
         
-        // Show corresponding form
-        document.querySelectorAll('.form-content').forEach(form => {
-            form.classList.remove('active');
-        });
-        document.getElementById(`form-${tabName}`).classList.add('active');
+        return result;
     }
     
-    calculateStats() {
-        const data = this.data || this.getMockData();
-        
-        const currentMonth = new Date().getMonth() + 1;
-        
-        // Calculate SMP stats
-        const smpMonthly = data.spmbSMP?.monthly?.find(m => m.bulan === currentMonth)?.count || 0;
-        const smpTotal = data.spmbSMP?.total || 0;
-        
-        // Calculate SMK stats
-        const smkMonthly = data.spmbSMK?.monthly?.find(m => m.bulan === currentMonth)?.count || 0;
-        const smkTotal = data.spmbSMK?.total || 0;
-        
-        // Calculate agenda stats
-        const agendaTotal = data.agenda?.length || 0;
-        const agendaCompleted = data.agenda?.filter(a => a.status === 'completed')?.length || 0;
-        
-        // Calculate photo stats
-        const photoTotal = data.photos?.length || 0;
-        const monthAgo = new Date();
-        monthAgo.setMonth(monthAgo.getMonth() - 1);
-        const photoRecent = data.photos?.filter(p => {
-            try {
-                return new Date(p.tanggal) > monthAgo;
-            } catch {
-                return false;
-            }
-        })?.length || 0;
-        
-        return {
-            smp: {
-                total: smpTotal,
-                monthly: smpMonthly
-            },
-            smk: {
-                total: smkTotal,
-                monthly: smkMonthly
-            },
-            agenda: {
-                total: agendaTotal,
-                completed: agendaCompleted
-            },
-            photos: {
-                total: photoTotal,
-                recent: photoRecent
-            }
-        };
-    }
-    
-    renderMonthlyTable(unit) {
-        const data = unit === 'SMP' ? this.data?.spmbSMP?.monthly : this.data?.spmbSMK?.monthly;
-        const targets = unit === 'SMP' ? CONFIG.SPMB_TARGETS.SMP.MONTHLY : CONFIG.SPMB_TARGETS.SMK.MONTHLY;
-        
-        if (!data || data.length === 0) {
-            return `
-                <tr>
-                    <td colspan="5" style="text-align: center; padding: 30px; color: #666;">
-                        <i class="fas fa-database"></i> Belum ada data
-                    </td>
-                </tr>
-            `;
-        }
-        
-        return data.map((item, index) => {
-            const target = targets[index] || 0;
-            const achievement = target > 0 ? Math.round((item.count / target) * 100) : 0;
-            const difference = item.count - target;
-            
-            return `
-                <tr>
-                    <td><strong>${CONFIG.APP.MONTHS[item.bulan - 1] || `Bulan ${item.bulan}`}</strong></td>
-                    <td>${target}</td>
-                    <td>${item.count}</td>
-                    <td style="color: ${difference >= 0 ? '#27ae60' : '#e74c3c'};">
-                        ${difference >= 0 ? '+' : ''}${difference}
-                    </td>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="min-width: 40px;">${achievement}%</span>
-                            <div style="flex: 1; height: 8px; background: #eee; border-radius: 4px; overflow: hidden;">
-                                <div style="width: ${Math.min(achievement, 100)}%; height: 100%; 
-                                      background: ${achievement >= 100 ? '#27ae60' : achievement >= 80 ? '#f39c12' : '#e74c3c'};">
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-    
-    renderAgendaList() {
-        const agendas = this.data?.agenda || [];
-        
-        if (agendas.length === 0) {
-            return `
-                <div style="text-align: center; padding: 50px; background: white; border-radius: 10px;">
-                    <i class="fas fa-calendar-times" style="font-size: 48px; color: #ddd; margin-bottom: 20px;"></i>
-                    <h3 style="color: #666;">Belum ada agenda</h3>
-                    <button class="btn btn-primary" onclick="app.navigateTo('input-data')" style="margin-top: 20px;">
-                        <i class="fas fa-plus"></i> Tambah Agenda Pertama
-                    </button>
-                </div>
-            `;
-        }
-        
-        return `
-            <div style="background: white; border-radius: 10px; overflow: hidden;">
-                <div style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0;">Daftar Agenda</h3>
-                    <button class="btn btn-primary" onclick="app.navigateTo('input-data')">
-                        <i class="fas fa-plus"></i> Tambah Baru
-                    </button>
-                </div>
-                
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Kegiatan</th>
-                            <th>Lokasi</th>
-                            <th>Status</th>
-                            <th>Penanggung Jawab</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${agendas.map(agenda => {
-                            const status = CONFIG.AGENDA_STATUS[agenda.status] || CONFIG.AGENDA_STATUS.scheduled;
-                            return `
-                                <tr>
-                                    <td>${agenda.tanggal || '-'}</td>
-                                    <td>${agenda.kegiatan || '-'}</td>
-                                    <td>${agenda.lokasi || '-'}</td>
-                                    <td>
-                                        <span style="display: inline-block; padding: 5px 10px; border-radius: 20px; 
-                                              background: ${status.color}; color: ${status.text}; font-size: 12px;">
-                                            ${status.label}
-                                        </span>
-                                    </td>
-                                    <td>${agenda.penanggung_jawab || '-'}</td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `;
-    }
-    
-    renderGallery() {
-        const photos = this.data?.photos || [];
-        
-        if (photos.length === 0) {
-            return `
-                <div style="text-align: center; padding: 50px; background: white; border-radius: 10px;">
-                    <i class="fas fa-images" style="font-size: 48px; color: #ddd; margin-bottom: 20px;"></i>
-                    <h3 style="color: #666;">Belum ada foto</h3>
-                    <button class="btn btn-primary" onclick="app.navigateTo('input-data')" style="margin-top: 20px;">
-                        <i class="fas fa-upload"></i> Upload Foto Pertama
-                    </button>
-                </div>
-            `;
-        }
-        
-        return `
-            <div style="margin-bottom: 30px;">
-                <button class="btn btn-primary" onclick="app.navigateTo('input-data')">
-                    <i class="fas fa-upload"></i> Upload Foto Baru
-                </button>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
-                ${photos.map(photo => `
-                    <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                        <div style="height: 150px; overflow: hidden;">
-                            <img src="${photo.url || 'https://via.placeholder.com/400x300?text=Photo'}" 
-                                 alt="${photo.kegiatan || 'Foto'}"
-                                 style="width: 100%; height: 100%; object-fit: cover;"
-                                 onerror="this.src='https://via.placeholder.com/400x300?text=Gambar+Tidak+Tersedia'">
-                        </div>
-                        <div style="padding: 15px;">
-                            <h4 style="margin: 0 0 5px 0;">${photo.kegiatan || 'Tanpa Judul'}</h4>
-                            <p style="color: #666; font-size: 12px; margin: 0 0 10px 0;">
-                                <i class="fas fa-calendar"></i> ${photo.tanggal || '-'}
-                            </p>
-                            <p style="font-size: 14px; color: #555;">${photo.deskripsi || ''}</p>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-    
-    renderSettings() {
-        return `
-            <div class="form-container">
-                <h3><i class="fas fa-cog"></i> Pengaturan Sistem</h3>
-                
-                <div class="form-group">
-                    <label><i class="fas fa-spreadsheet"></i> Google Spreadsheet ID</label>
-                    <input type="text" id="setting-sheet-id" class="form-control" 
-                           value="${CONFIG.SPREADSHEET_ID}" 
-                           placeholder="1AbC2dEfG3hIjK4lMnOp5QrStUvWxYz">
-                </div>
-                
-                <div class="form-group">
-                    <label><i class="fas fa-link"></i> Web App URL</label>
-                    <input type="text" id="setting-webapp-url" class="form-control" 
-                           value="${CONFIG.WEB_APP_URL}"
-                           placeholder="https://script.google.com/macros/s/.../exec">
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-top: 30px;">
-                    <button class="btn btn-primary" onclick="app.saveSettings()">
-                        <i class="fas fa-save"></i> Simpan Pengaturan
-                    </button>
-                    <button class="btn btn-secondary" onclick="app.testAPI()">
-                        <i class="fas fa-wifi"></i> Test Koneksi
-                    </button>
-                    <button class="btn btn-secondary" onclick="app.resetSettings()">
-                        <i class="fas fa-undo"></i> Reset
-                    </button>
-                </div>
-                
-                <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-                    <h4><i class="fas fa-info-circle"></i> Cara Mendapatkan:</h4>
-                    <ol style="margin-left: 20px; line-height: 1.8;">
-                        <li><strong>Spreadsheet ID:</strong> Dapat dari URL Google Sheets</li>
-                        <li><strong>Web App URL:</strong> Dapat setelah deploy Google Apps Script</li>
-                    </ol>
-                </div>
-            </div>
-        `;
-    }
-    
-    saveSettings() {
-        try {
-            const sheetId = document.getElementById('setting-sheet-id').value.trim();
-            const webAppUrl = document.getElementById('setting-webapp-url').value.trim();
-            
-            if (!sheetId || !webAppUrl) {
-                window.auth.showNotification('Semua field harus diisi', 'error');
-                return;
-            }
-            
-            // Update config (in a real app, this would save to localStorage)
-            CONFIG.SPREADSHEET_ID = sheetId;
-            CONFIG.WEB_APP_URL = webAppUrl;
-            
-            // Save to localStorage for persistence
-            localStorage.setItem('spmb_config', JSON.stringify({
-                SPREADSHEET_ID: sheetId,
-                WEB_APP_URL: webAppUrl
-            }));
-            
-            window.auth.showNotification('Pengaturan berhasil disimpan', 'success');
-            
-            // Test new settings
-            setTimeout(() => this.testAPI(), 1000);
-            
-        } catch (error) {
-            console.error('Save settings error:', error);
-            window.auth.showNotification('Gagal menyimpan pengaturan', 'error');
-        }
-    }
-    
-    resetSettings() {
-        const defaultConfig = {
-            SPREADSHEET_ID: '1fnk5hFLA9q-ZH9NoGQPD_dP0qIQTAT9piPWLkPbFLNE',
-            WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbyrNyz1uYx9NJ4pLsD_i68uKymU8t_raieFurp2NYSL4J4LxAL0GCQM79rl60gGSck/exec'
-        };
-        
-        document.getElementById('setting-sheet-id').value = defaultConfig.SPREADSHEET_ID;
-        document.getElementById('setting-webapp-url').value = defaultConfig.WEB_APP_URL;
-        
-        window.auth.showNotification('Pengaturan direset ke default', 'info');
-    }
-    
-    // Chart functions
-    initDashboardCharts() {
-        this.initTrendChart();
-        this.initStatusChart();
-    }
-    
-    initTrendChart() {
-        const ctx = document.getElementById('trend-chart');
-        if (!ctx) return;
-        
-        // Sample chart data
-        const data = {
-            labels: ['Nov', 'Des', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul'],
-            datasets: [
-                {
-                    label: 'SMP',
-                    data: [5, 10, 15, 20, 25, 20, 15, 10, 5],
-                    borderColor: CONFIG.THEME.COLORS.smp,
-                    backgroundColor: CONFIG.THEME.COLORS.smp + '20',
-                    tension: 0.4
+    loadMockData() {
+        // Mock data untuk testing jika spreadsheet tidak terhubung
+        this.data = {
+            spmb: {
+                SMP: {
+                    earlybird: { pendaftar: 45, formulir: 42, dsp: 38 },
+                    gelombang1: { pendaftar: 58, formulir: 54, dsp: 50 },
+                    gelombang2: { pendaftar: 48, formulir: 45, dsp: 42 },
+                    total: { pendaftar: 151, formulir: 141, dsp: 130 }
                 },
-                {
-                    label: 'SMK',
-                    data: [10, 20, 20, 20, 25, 35, 20, 40, 40],
-                    borderColor: CONFIG.THEME.COLORS.smk,
-                    backgroundColor: CONFIG.THEME.COLORS.smk + '20',
-                    tension: 0.4
+                SMK: {
+                    earlybird: { pendaftar: 68, formulir: 62, dsp: 58 },
+                    gelombang1: { pendaftar: 78, formulir: 74, dsp: 70 },
+                    gelombang2: { pendaftar: 58, formulir: 54, dsp: 50 },
+                    total: { pendaftar: 204, formulir: 190, dsp: 178 }
                 }
-            ]
-        };
-        
-        new Chart(ctx, {
-            type: 'line',
-            data: data,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                }
-            }
-        });
-    }
-    
-    initStatusChart() {
-        const ctx = document.getElementById('status-chart');
-        if (!ctx) return;
-        
-        const data = {
-            labels: ['Terjadwal', 'Berlangsung', 'Selesai'],
-            datasets: [{
-                data: [5, 3, 8],
-                backgroundColor: [
-                    CONFIG.AGENDA_STATUS.scheduled.color,
-                    CONFIG.AGENDA_STATUS.ongoing.color,
-                    CONFIG.AGENDA_STATUS.completed.color
-                ],
-                borderColor: [
-                    CONFIG.AGENDA_STATUS.scheduled.text,
-                    CONFIG.AGENDA_STATUS.ongoing.text,
-                    CONFIG.AGENDA_STATUS.completed.text
-                ],
-                borderWidth: 1
-            }]
-        };
-        
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: data,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                }
-            }
-        });
-    }
-    
-    initSPMBCharts(unit) {
-        const ctx = document.getElementById('spmb-chart');
-        if (!ctx) return;
-        
-        const color = unit === 'SMP' ? CONFIG.THEME.COLORS.smp : CONFIG.THEME.COLORS.smk;
-        const targets = unit === 'SMP' ? CONFIG.SPMB_TARGETS.SMP.MONTHLY : CONFIG.SPMB_TARGETS.SMK.MONTHLY;
-        
-        const data = {
-            labels: CONFIG.APP.MONTHS.slice(0, 6),
-            datasets: [
-                {
-                    label: 'Realisasi',
-                    data: [10, 20, 20, 20, 25, 35, 20, 40, 40],
-                    backgroundColor: color + '80',
-                    borderColor: color,
-                    borderWidth: 2
-                },
-                {
-                    label: 'Target',
-                    data: targets.slice(0, 6),
-                    type: 'line',
-                    borderColor: '#e74c3c',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.4
-                }
-            ]
-        };
-        
-        new Chart(ctx, {
-            type: 'bar',
-            data: data,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    }
-    
-    getMockData() {
-        return {
-            spmbSMP: {
-                total: 80,
-                monthly: [
-                    { bulan: 11, count: 5 },
-                    { bulan: 12, count: 5 },
-                    { bulan: 1, count: 10 },
-                    { bulan: 2, count: 10 },
-                    { bulan: 3, count: 15 },
-                    { bulan: 4, count: 20 }
-                    { bulan: 5, count: 5 },
-                    { bulan: 6, count: 5 },
-                    { bulan: 7, count: 5 }
-                ]
-            },
-            spmbSMK: {
-                total: 280,
-                monthly: [
-                     { bulan: 11, count: 20 },
-                    { bulan: 12, count: 25 },
-                    { bulan: 1, count: 30 },
-                    { bulan: 2, count: 35 },
-                    { bulan: 3, count: 40 },
-                    { bulan: 4, count: 45 }
-                    { bulan: 5, count: 30 },
-                    { bulan: 6, count: 35 },
-                    { bulan: 7, count: 20}
-                ]
             },
             agenda: [
                 {
-                    tanggal: '2024-06-15',
+                    id: 1,
+                    tanggal: '2026-06-15',
                     kegiatan: 'Open House SMP',
                     lokasi: 'Aula Utama',
+                    kategori: 'Event',
                     status: 'completed',
                     penanggung_jawab: 'Budi Santoso'
                 },
                 {
-                    tanggal: '2024-06-20',
+                    id: 2,
+                    tanggal: '2026-06-20',
                     kegiatan: 'Workshop Teknologi',
                     lokasi: 'Lab Komputer',
+                    kategori: 'Workshop',
                     status: 'ongoing',
                     penanggung_jawab: 'Siti Aisyah'
+                },
+                {
+                    id: 3,
+                    tanggal: '2026-06-25',
+                    kegiatan: 'Pameran Pendidikan',
+                    lokasi: 'Mall Kota',
+                    kategori: 'Event',
+                    status: 'scheduled',
+                    penanggung_jawab: 'Ahmad Fauzi'
                 }
             ],
             photos: [
                 {
-                    tanggal: '2024-06-15',
+                    id: 1,
+                    tanggal: '2026-06-15',
                     kegiatan: 'Open House SMP',
-                    url: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=300&q=80',
+                    url: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400',
                     deskripsi: 'Sesi presentasi untuk orang tua'
+                },
+                {
+                    id: 2,
+                    tanggal: '2026-06-10',
+                    kegiatan: 'Workshop Coding',
+                    url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400',
+                    deskripsi: 'Siswa belajar pemrograman dasar'
                 }
             ]
         };
     }
+    
+    // ============================================
+    // NAVIGATION
+    // ============================================
+    
+    navigateTo(page) {
+        this.currentPage = page;
+        
+        // Update active nav
+        document.querySelectorAll('[data-page]').forEach(el => {
+            el.classList.remove('active', 'bg-[#276874]', 'text-white');
+            el.classList.add('hover:bg-gray-100');
+        });
+        
+        const activeNav = document.querySelector(`[data-page="${page}"]`);
+        if (activeNav) {
+            activeNav.classList.add('active', 'bg-[#276874]', 'text-white');
+            activeNav.classList.remove('hover:bg-gray-100');
+        }
+        
+        // Close mobile sidebar
+        if (window.innerWidth < 1024) {
+            document.getElementById('sidebar')?.classList.add('-translate-x-full');
+            document.getElementById('sidebar-overlay')?.classList.add('hidden');
+        }
+        
+        // Load page content
+        this.loadPageContent(page);
+    }
+    
+    refreshCurrentPage() {
+        this.loadPageContent(this.currentPage);
+    }
+    
+    loadPageContent(page) {
+        const contentArea = document.getElementById('content-area');
+        if (!contentArea) return;
+        
+        switch(page) {
+            case 'dashboard':
+                contentArea.innerHTML = this.renderDashboard();
+                setTimeout(() => this.initDashboardCharts(), 100);
+                break;
+            case 'spmb-smp':
+                contentArea.innerHTML = this.renderSPMBPage('SMP');
+                break;
+            case 'spmb-smk':
+                contentArea.innerHTML = this.renderSPMBPage('SMK');
+                break;
+            case 'spmb-comparison':
+                contentArea.innerHTML = this.renderComparisonPage();
+                break;
+            case 'agenda-list':
+                contentArea.innerHTML = this.renderAgendaList();
+                break;
+            case 'input-data':
+                contentArea.innerHTML = this.renderInputForm();
+                break;
+            case 'gallery':
+                contentArea.innerHTML = this.renderGallery();
+                break;
+            case 'data-spmb':
+                contentArea.innerHTML = this.renderSPMBDataTable();
+                break;
+            case 'settings':
+                contentArea.innerHTML = this.renderSettings();
+                break;
+            default:
+                contentArea.innerHTML = this.renderDashboard();
+        }
+        
+        // Refresh Lucide icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+    
+    // ============================================
+    // RENDER FUNCTIONS - DASHBOARD
+    // ============================================
+    
+    renderDashboard() {
+        const smpData = this.data.spmb?.SMP || { total: { pendaftar: 0, formulir: 0, dsp: 0 } };
+        const smkData = this.data.spmb?.SMK || { total: { pendaftar: 0, formulir: 0, dsp: 0 } };
+        const periodeDef = CONFIG.PERIODE_DEFINITIONS[this.currentYear];
+        
+        return `
+            <div class="space-y-6">
+                <!-- Header -->
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 class="text-foreground text-2xl md:text-3xl font-bold mb-1">
+                            Dashboard Monitoring SPMB
+                        </h1>
+                        <p class="text-gray-500 text-sm md:text-base">
+                            Data real-time dari Google Spreadsheet • Update terakhir: ${new Date().toLocaleString('id-ID')}
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <select id="academic-year-select" class="px-4 py-2.5 border border-border rounded-button text-foreground focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                            ${CONFIG.ACADEMIC_YEARS.map(year => `
+                                <option value="${year}" ${year === this.currentYear ? 'selected' : ''}>
+                                    Tahun Ajaran ${year}
+                                </option>
+                            `).join('')}
+                        </select>
+                        <button onclick="app.testConnection()" class="flex items-center justify-center gap-2 px-4 py-2.5 border border-border rounded-button text-foreground font-medium hover:border-primary transition-all duration-200">
+                            <i data-lucide="wifi" class="w-4 h-4"></i>
+                            <span class="hidden md:inline">Test Koneksi</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Periode Info Card -->
+                <div class="bg-gradient-to-r from-primary/10 to-primary/5 rounded-card p-5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                            <i data-lucide="calendar" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-foreground font-bold">Tahun Ajaran ${this.currentYear}</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-earlybird rounded-full"></span>
+                                    <span>Early Bird: ${periodeDef?.earlybird.label || '21 Nov - 31 Jan'}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-gel1 rounded-full"></span>
+                                    <span>Gelombang 1: ${periodeDef?.gelombang1.label || '01 Feb - 30 Apr'}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-gel2 rounded-full"></span>
+                                    <span>Gelombang 2: ${periodeDef?.gelombang2.label || '01 Mei - 15 Jul'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SMP Stats -->
+                <div>
+                    <h3 class="text-foreground text-lg font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="school" class="w-5 h-5 text-smp"></i>
+                        SMP - Total Penerimaan
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        ${this.renderStatCard('Total Pendaftar', smpData.total.pendaftar, `${smpData.total.pendaftar} calon siswa`, 'users', 'smp')}
+                        ${this.renderStatCard('Bayar Formulir', smpData.total.formulir, `${smpData.total.pendaftar > 0 ? Math.round((smpData.total.formulir / smpData.total.pendaftar) * 100) : 0}% dari pendaftar`, 'file-text', 'warning')}
+                        ${this.renderStatCard('Bayar DSP', smpData.total.dsp, `${smpData.total.pendaftar > 0 ? Math.round((smpData.total.dsp / smpData.total.pendaftar) * 100) : 0}% dari pendaftar`, 'credit-card', 'success')}
+                        ${this.renderStatCard('Konversi ke DSP', smpData.total.formulir > 0 ? Math.round((smpData.total.dsp / smpData.total.formulir) * 100) + '%' : '0%', `${smpData.total.dsp} dari ${smpData.total.formulir} formulir`, 'trending-up', 'info')}
+                    </div>
+                </div>
+
+                <!-- SMK Stats -->
+                <div class="mt-6">
+                    <h3 class="text-foreground text-lg font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="graduation-cap" class="w-5 h-5 text-smk"></i>
+                        SMK - Total Penerimaan
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        ${this.renderStatCard('Total Pendaftar', smkData.total.pendaftar, `${smkData.total.pendaftar} calon siswa`, 'users', 'smk')}
+                        ${this.renderStatCard('Bayar Formulir', smkData.total.formulir, `${smkData.total.pendaftar > 0 ? Math.round((smkData.total.formulir / smkData.total.pendaftar) * 100) : 0}% dari pendaftar`, 'file-text', 'warning')}
+                        ${this.renderStatCard('Bayar DSP', smkData.total.dsp, `${smkData.total.pendaftar > 0 ? Math.round((smkData.total.dsp / smkData.total.pendaftar) * 100) : 0}% dari pendaftar`, 'credit-card', 'success')}
+                        ${this.renderStatCard('Konversi ke DSP', smkData.total.formulir > 0 ? Math.round((smkData.total.dsp / smkData.total.formulir) * 100) + '%' : '0%', `${smkData.total.dsp} dari ${smkData.total.formulir} formulir`, 'trending-up', 'info')}
+                    </div>
+                </div>
+
+                <!-- Periode Breakdown -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    ${this.renderPeriodeBreakdown('SMP', this.data.spmb?.SMP)}
+                    ${this.renderPeriodeBreakdown('SMK', this.data.spmb?.SMK)}
+                </div>
+
+                <!-- Recent Agenda -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    <div class="lg:col-span-2">
+                        ${this.renderRecentAgenda()}
+                    </div>
+                    <div>
+                        ${this.renderRecentPhotos()}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    renderStatCard(label, value, subtitle, icon, colorClass) {
+        const colors = {
+            smp: 'bg-smp/10 text-smp',
+            smk: 'bg-smk/10 text-smk',
+            warning: 'bg-warning/10 text-warning',
+            success: 'bg-success/10 text-success',
+            info: 'bg-info/10 text-info',
+            primary: 'bg-primary/10 text-primary'
+        };
+        
+        return `
+            <div class="bg-muted rounded-card pt-5 px-3 pb-3">
+                <h3 class="text-foreground text-sm font-semibold ml-3 mb-3">${label}</h3>
+                <div class="bg-white rounded-card p-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-foreground text-3xl font-extrabold">${value.toLocaleString()}</p>
+                            <p class="text-gray-500 text-xs mt-1">${subtitle}</p>
+                        </div>
+                        <div class="w-14 h-14 ${colors[colorClass] || 'bg-gray-100 text-gray-600'} rounded-icon flex items-center justify-center">
+                            <i data-lucide="${icon}" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    renderPeriodeBreakdown(unit, data) {
+        if (!data) return '';
+        
+        const colors = {
+            earlybird: 'bg-earlybird',
+            gelombang1: 'bg-gel1',
+            gelombang2: 'bg-gel2'
+        };
+        
+        const periodeLabels = {
+            earlybird: 'Early Bird',
+            gelombang1: 'Gelombang 1',
+            gelombang2: 'Gelombang 2'
+        };
+        
+        const periodeDates = {
+            earlybird: CONFIG.PERIODE_DEFINITIONS[this.currentYear]?.earlybird.label || '21 Nov - 31 Jan',
+            gelombang1: CONFIG.PERIODE_DEFINITIONS[this.currentYear]?.gelombang1.label || '01 Feb - 30 Apr',
+            gelombang2: CONFIG.PERIODE_DEFINITIONS[this.currentYear]?.gelombang2.label || '01 Mei - 15 Jul'
+        };
+        
+        return `
+            <div class="bg-muted rounded-card pt-5 px-3 pb-3">
+                <h3 class="text-foreground text-lg font-bold ml-3 mb-4 flex items-center gap-2">
+                    <i data-lucide="${unit === 'SMP' ? 'school' : 'graduation-cap'}" class="w-5 h-5 text-${unit === 'SMP' ? 'smp' : 'smk'}"></i>
+                    ${unit} - Per Periode
+                </h3>
+                <div class="bg-white rounded-card p-5">
+                    <div class="space-y-4">
+                        ${['earlybird', 'gelombang1', 'gelombang2'].map(periode => `
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-3 h-3 ${colors[periode]} rounded-full"></span>
+                                        <span class="text-foreground font-medium">${periodeLabels[periode]}</span>
+                                    </div>
+                                    <span class="text-sm text-gray-500">${periodeDates[periode]}</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-center">
+                                    <div class="bg-gray-50 p-2 rounded">
+                                        <p class="text-xs text-gray-500">Pendaftar</p>
+                                        <p class="text-foreground font-bold">${data[periode]?.pendaftar || 0}</p>
+                                    </div>
+                                    <div class="bg-gray-50 p-2 rounded">
+                                        <p class="text-xs text-gray-500">Formulir</p>
+                                        <p class="text-foreground font-bold">${data[periode]?.formulir || 0}</p>
+                                    </div>
+                                    <div class="bg-gray-50 p-2 rounded">
+                                        <p class="text-xs text-gray-500">DSP</p>
+                                        <p class="text-foreground font-bold">${data[periode]?.dsp || 0}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    renderRecentAgenda() {
+        const agendas = this.data.agenda || [];
+        const recent = agendas.slice(0, 5);
+        
+        return `
+            <div class="bg-muted rounded-card pt-5 px-3 pb-3 h-full">
+                <div class="flex items-center justify-between mb-4 px-3">
+                    <h3 class="text-foreground text-lg font-bold">Agenda Terbaru</h3>
+                    <a href="#" data-page="agenda-list" onclick="app.navigateTo('agenda-list'); return false;" class="text-sm text-primary hover:underline cursor-pointer">
+                        Lihat Semua
+                    </a>
+                </div>
+                <div class="bg-white rounded-card overflow-hidden">
+                    <div class="divide-y divide-gray-100">
+                        ${recent.length > 0 ? recent.map(agenda => {
+                            const status = CONFIG.AGENDA_STATUS[agenda.status] || CONFIG.AGENDA_STATUS.scheduled;
+                            return `
+                                <div class="p-4 hover:bg-gray-50 transition-all duration-200">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-10 h-10 ${status.color} rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <i data-lucide="${status.icon}" class="w-5 h-5"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-foreground font-semibold text-sm mb-1">${agenda.kegiatan || 'Tanpa Judul'}</h4>
+                                            <div class="flex items-center gap-3 text-xs text-gray-500">
+                                                <span class="flex items-center gap-1">
+                                                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                                                    ${agenda.tanggal || '-'}
+                                                </span>
+                                                <span class="flex items-center gap-1">
+                                                    <i data-lucide="map-pin" class="w-3 h-3"></i>
+                                                    ${agenda.lokasi || '-'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <span class="px-2 py-1 text-xs rounded-full ${status.color}">
+                                            ${status.label}
+                                        </span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('') : `
+                            <div class="p-8 text-center text-gray-500">
+                                <i data-lucide="calendar" class="w-12 h-12 mx-auto mb-3 text-gray-300"></i>
+                                <p>Belum ada agenda</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    renderRecentPhotos() {
+        const photos = this.data.photos || [];
+        const recent = photos.slice(0, 4);
+        
+        return `
+            <div class="bg-muted rounded-card pt-5 px-3 pb-3 h-full">
+                <div class="flex items-center justify-between mb-4 px-3">
+                    <h3 class="text-foreground text-lg font-bold">Foto Terbaru</h3>
+                    <a href="#" data-page="gallery" onclick="app.navigateTo('gallery'); return false;" class="text-sm text-primary hover:underline cursor-pointer">
+                        Lihat Semua
+                    </a>
+                </div>
+                <div class="bg-white rounded-card p-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        ${recent.length > 0 ? recent.map(photo => `
+                            <div class="relative group cursor-pointer" onclick="app.showPhoto('${photo.url}')">
+                                <img src="${photo.url}" alt="${photo.kegiatan}" class="w-full h-24 object-cover rounded-lg" onerror="this.src='https://via.placeholder.com/400x300?text=Foto+Tidak+Tersedia'">
+                                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="zoom-in" class="w-5 h-5 text-white"></i>
+                                </div>
+                            </div>
+                        `).join('') : `
+                            <div class="col-span-2 p-8 text-center text-gray-500">
+                                <i data-lucide="images" class="w-12 h-12 mx-auto mb-3 text-gray-300"></i>
+                                <p>Belum ada foto</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // ============================================
+    // SPMB PAGES
+    // ============================================
+    
+    renderSPMBPage(unit) {
+        const data = this.data.spmb?.[unit] || { 
+            earlybird: { pendaftar: 0, formulir: 0, dsp: 0 },
+            gelombang1: { pendaftar: 0, formulir: 0, dsp: 0 },
+            gelombang2: { pendaftar: 0, formulir: 0, dsp: 0 },
+            total: { pendaftar: 0, formulir: 0, dsp: 0 }
+        };
+        
+        const periodeDef = CONFIG.PERIODE_DEFINITIONS[this.currentYear];
+        
+        return `
+            <div class="space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 class="text-foreground text-2xl md:text-3xl font-bold mb-1">
+                            Monitoring SPMB ${unit}
+                        </h1>
+                        <p class="text-gray-500 text-sm md:text-base">
+                            Tahun Ajaran ${this.currentYear} • Data real-time dari spreadsheet
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="app.navigateTo('input-data')" class="flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white rounded-button font-medium hover:bg-primary-hover transition-all duration-200">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Tambah Data</span>
+                        </button>
+                        <button onclick="app.exportData('spmb-${unit.toLowerCase()}')" class="flex items-center justify-center gap-2 px-4 py-2.5 border border-border rounded-button text-foreground font-medium hover:border-primary transition-all duration-200">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span class="hidden md:inline">Export</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    ${this.renderStatCard('Total Pendaftar', data.total.pendaftar, `${data.total.pendaftar} calon siswa`, 'users', unit === 'SMP' ? 'smp' : 'smk')}
+                    ${this.renderStatCard('Bayar Formulir', data.total.formulir, `${data.total.pendaftar > 0 ? Math.round((data.total.formulir / data.total.pendaftar) * 100) : 0}% dari pendaftar`, 'file-text', 'warning')}
+                    ${this.renderStatCard('Bayar DSP', data.total.dsp, `${data.total.pendaftar > 0 ? Math.round((data.total.dsp / data.total.pendaftar) * 100) : 0}% dari pendaftar`, 'credit-card', 'success')}
+                    ${this.renderStatCard('Konversi ke DSP', data.total.formulir > 0 ? Math.round((data.total.dsp / data.total.formulir) * 100) + '%' : '0%', `${data.total.dsp} dari ${data.total.formulir} formulir`, 'trending-up', 'info')}
+                </div>
+
+                <div class="bg-muted rounded-card pt-5 px-3 pb-3">
+                    <h3 class="text-foreground text-lg font-bold ml-3 mb-4">Detail per Periode</h3>
+                    <div class="bg-white rounded-card p-5">
+                        <div class="space-y-6">
+                            ${['earlybird', 'gelombang1', 'gelombang2'].map(periode => {
+                                const periodeLabels = {
+                                    earlybird: 'Early Bird',
+                                    gelombang1: 'Gelombang 1',
+                                    gelombang2: 'Gelombang 2'
+                                };
+                                const periodeDates = {
+                                    earlybird: periodeDef?.earlybird.label || '21 Nov - 31 Jan',
+                                    gelombang1: periodeDef?.gelombang1.label || '01 Feb - 30 Apr',
+                                    gelombang2: periodeDef?.gelombang2.label || '01 Mei - 15 Jul'
+                                };
+                                const colors = {
+                                    earlybird: 'bg-earlybird',
+                                    gelombang1: 'bg-gel1',
+                                    gelombang2: 'bg-gel2'
+                                };
+                                
+                                return `
+                                    <div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="flex items-center gap-2">
+                                                <span class="w-3 h-3 ${colors[periode]} rounded-full"></span>
+                                                <h4 class="text-foreground font-semibold">${periodeLabels[periode]}</h4>
+                                            </div>
+                                            <span class="text-sm text-gray-500">${periodeDates[periode]}</span>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div class="bg-gray-50 rounded-lg p-4">
+                                                <p class="text-xs text-gray-500 mb-1">Total Pendaftar</p>
+                                                <p class="text-2xl font-bold text-foreground">${data[periode]?.pendaftar || 0}</p>
+                                            </div>
+                                            <div class="bg-gray-50 rounded-lg p-4">
+                                                <p class="text-xs text-gray-500 mb-1">Bayar Formulir</p>
+                                                <p class="text-2xl font-bold text-warning">${data[periode]?.formulir || 0}</p>
+                                                <p class="text-xs text-gray-500 mt-1">${data[periode]?.pendaftar > 0 ? Math.round((data[periode]?.formulir / data[periode]?.pendaftar) * 100) : 0}%</p>
+                                            </div>
+                                            <div class="bg-gray-50 rounded-lg p-4">
+                                                <p class="text-xs text-gray-500 mb-1">Bayar DSP</p>
+                                                <p class="text-2xl font-bold text-success">${data[periode]?.dsp || 0}</p>
+                                                <p class="text-xs text-gray-500 mt-1">${data[periode]?.pendaftar > 0 ? Math.round((data[periode]?.dsp / data[periode]?.pendaftar) * 100) : 0}%</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // ============================================
+    // INPUT FORM
+    // ============================================
+    
+    renderInputForm() {
+        const today = new Date().toISOString().split('T')[0];
+        
+        return `
+            <div class="space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 class="text-foreground text-2xl md:text-3xl font-bold mb-1">Input Data Baru</h1>
+                        <p class="text-gray-500 text-sm md:text-base">
+                            Tambah data akan langsung tersimpan ke Google Spreadsheet
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-muted rounded-card pt-5 px-3 pb-3">
+                    <div class="bg-white rounded-card p-5">
+                        <div class="flex flex-wrap gap-2 border-b border-gray-200 pb-4">
+                            <button onclick="app.switchTab('spmb')" id="tab-spmb" class="tab-btn px-5 py-2.5 rounded-button bg-primary text-white font-medium" data-tab="spmb">
+                                <i data-lucide="users" class="w-4 h-4 inline mr-2"></i>
+                                Data SPMB
+                            </button>
+                            <button onclick="app.switchTab('agenda')" id="tab-agenda" class="tab-btn px-5 py-2.5 rounded-button border border-border text-foreground font-medium hover:border-primary" data-tab="agenda">
+                                <i data-lucide="calendar" class="w-4 h-4 inline mr-2"></i>
+                                Agenda Kegiatan
+                            </button>
+                            <button onclick="app.switchTab('photo')" id="tab-photo" class="tab-btn px-5 py-2.5 rounded-button border border-border text-foreground font-medium hover:border-primary" data-tab="photo">
+                                <i data-lucide="camera" class="w-4 h-4 inline mr-2"></i>
+                                Foto Kegiatan
+                            </button>
+                        </div>
+
+                        <!-- Form SPMB -->
+                        <div id="form-spmb" class="mt-6">
+                            <h3 class="text-foreground text-lg font-bold mb-4">Form Input Data SPMB</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Unit</label>
+                                    <select id="input-unit" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                        <option value="SMP">SMP</option>
+                                        <option value="SMK">SMK</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Tahun Ajaran</label>
+                                    <select id="input-tahun-ajaran" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                        ${CONFIG.ACADEMIC_YEARS.map(year => `
+                                            <option value="${year}" ${year === this.currentYear ? 'selected' : ''}>${year}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Periode</label>
+                                    <select id="input-periode" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                        <option value="earlybird">Early Bird</option>
+                                        <option value="gelombang1">Gelombang 1</option>
+                                        <option value="gelombang2">Gelombang 2</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Tanggal Input</label>
+                                    <input type="date" id="input-tanggal" value="${today}" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Jumlah Pendaftar</label>
+                                    <input type="number" id="input-pendaftar" min="0" placeholder="0" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Bayar Formulir</label>
+                                    <input type="number" id="input-formulir" min="0" placeholder="0" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Bayar DSP</label>
+                                    <input type="number" id="input-dsp" min="0" placeholder="0" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="block text-foreground text-sm font-medium">Keterangan</label>
+                                    <textarea id="input-keterangan" rows="3" placeholder="Contoh: Pendaftar jalur reguler, prestasi, dll." class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"></textarea>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <button id="btn-save-spmb" class="w-full md:w-auto px-6 py-3 bg-primary text-white rounded-button font-medium hover:bg-primary-hover transition-all duration-200 flex items-center justify-center gap-2">
+                                    <i data-lucide="save" class="w-5 h-5"></i>
+                                    Simpan Data SPMB ke Spreadsheet
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Form Agenda (Hidden by default) -->
+                        <div id="form-agenda" class="mt-6 hidden">
+                            <h3 class="text-foreground text-lg font-bold mb-4">Form Input Agenda</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Tanggal</label>
+                                    <input type="date" id="agenda-tanggal" value="${today}" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Kategori</label>
+                                    <select id="agenda-kategori" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                        ${CONFIG.AGENDA_CATEGORIES.map(cat => `
+                                            <option value="${cat}">${cat}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="block text-foreground text-sm font-medium">Nama Kegiatan</label>
+                                    <input type="text" id="agenda-kegiatan" placeholder="Contoh: Open House SMP" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Lokasi</label>
+                                    <input type="text" id="agenda-lokasi" placeholder="Contoh: Aula Utama" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Penanggung Jawab</label>
+                                    <input type="text" id="agenda-pj" value="${window.auth?.currentUser?.name || ''}" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="block text-foreground text-sm font-medium">Deskripsi</label>
+                                    <textarea id="agenda-deskripsi" rows="3" placeholder="Deskripsi lengkap kegiatan..." class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"></textarea>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <button id="btn-save-agenda" class="w-full md:w-auto px-6 py-3 bg-primary text-white rounded-button font-medium hover:bg-primary-hover transition-all duration-200 flex items-center justify-center gap-2">
+                                    <i data-lucide="save" class="w-5 h-5"></i>
+                                    Simpan Agenda ke Spreadsheet
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Form Foto (Hidden by default) -->
+                        <div id="form-photo" class="mt-6 hidden">
+                            <h3 class="text-foreground text-lg font-bold mb-4">Form Upload Foto</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Tanggal</label>
+                                    <input type="date" id="photo-tanggal" value="${today}" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-foreground text-sm font-medium">Kegiatan</label>
+                                    <input type="text" id="photo-kegiatan" placeholder="Nama kegiatan" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="block text-foreground text-sm font-medium">URL Foto</label>
+                                    <input type="url" id="photo-url" placeholder="https://example.com/foto.jpg" class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none">
+                                    <p class="text-xs text-gray-500 mt-1">Gunakan link dari Google Drive, Imgur, atau hosting lainnya</p>
+                                </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="block text-foreground text-sm font-medium">Deskripsi</label>
+                                    <textarea id="photo-deskripsi" rows="2" placeholder="Deskripsi foto..." class="w-full px-4 py-3 border border-border rounded-button focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"></textarea>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <button id="btn-save-photo" class="w-full md:w-auto px-6 py-3 bg-primary text-white rounded-button font-medium hover:bg-primary-hover transition-all duration-200 flex items-center justify-center gap-2">
+                                    <i data-lucide="upload" class="w-5 h-5"></i>
+                                    Upload Foto ke Spreadsheet
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // ============================================
+    // DATA SAVE FUNCTIONS - KIRIM KE SPREADSHEET
+    // ============================================
+    
+    async saveSPMBData() {
+        const unit = document.getElementById('input-unit')?.value;
+        const tahunAjaran = document.getElementById('input-tahun-ajaran')?.value;
+        const periode = document.getElementById('input-periode')?.value;
+        const tanggal = document.getElementById('input-tanggal')?.value;
+        const pendaftar = document.getElementById('input-pendaftar')?.value;
+        const formulir = document.getElementById('input-formulir')?.value;
+        const dsp = document.getElementById('input-dsp')?.value;
+        const keterangan = document.getElementById('input-keterangan')?.value;
+        
+        if (!unit || !tahunAjaran || !periode || !pendaftar) {
+            this.showNotification('Data pendaftar wajib diisi', 'error');
+            return;
+        }
+        
+        const data = {
+            unit: unit,
+            tahun_ajaran: tahunAjaran,
+            periode: periode,
+            tanggal_input: tanggal,
+            jumlah_pendaftar: parseInt(pendaftar) || 0,
+            jumlah_bayar_formulir: parseInt(formulir) || 0,
+            jumlah_bayar_dsp: parseInt(dsp) || 0,
+            keterangan: keterangan || ''
+        };
+        
+        const sheetName = unit === 'SMP' ? CONFIG.SHEETS.SPMB_SMP : CONFIG.SHEETS.SPMB_SMK;
+        
+        this.showNotification('Menyimpan data ke spreadsheet...', 'info');
+        
+        const result = await this.saveToAPI(sheetName, data);
+        
+        if (result.success) {
+            // Clear form
+            document.getElementById('input-pendaftar').value = '';
+            document.getElementById('input-formulir').value = '';
+            document.getElementById('input-dsp').value = '';
+            document.getElementById('input-keterangan').value = '';
+            
+            this.showNotification('Data SPMB berhasil disimpan ke spreadsheet', 'success');
+        }
+    }
+    
+    async saveAgendaData() {
+        const tanggal = document.getElementById('agenda-tanggal')?.value;
+        const kegiatan = document.getElementById('agenda-kegiatan')?.value;
+        const lokasi = document.getElementById('agenda-lokasi')?.value;
+        const kategori = document.getElementById('agenda-kategori')?.value;
+        const pj = document.getElementById('agenda-pj')?.value;
+        const deskripsi = document.getElementById('agenda-deskripsi')?.value;
+        
+        if (!tanggal || !kegiatan || !lokasi || !pj) {
+            this.showNotification('Semua field wajib diisi', 'error');
+            return;
+        }
+        
+        const data = {
+            tanggal: tanggal,
+            kegiatan: kegiatan,
+            lokasi: lokasi,
+            kategori: kategori,
+            status: 'scheduled',
+            penanggung_jawab: pj,
+            deskripsi: deskripsi || ''
+        };
+        
+        this.showNotification('Menyimpan agenda ke spreadsheet...', 'info');
+        
+        const result = await this.saveToAPI(CONFIG.SHEETS.AGENDA, data);
+        
+        if (result.success) {
+            document.getElementById('agenda-kegiatan').value = '';
+            document.getElementById('agenda-lokasi').value = '';
+            document.getElementById('agenda-deskripsi').value = '';
+            
+            this.showNotification('Agenda berhasil disimpan ke spreadsheet', 'success');
+        }
+    }
+    
+    async savePhotoData() {
+        const tanggal = document.getElementById('photo-tanggal')?.value;
+        const kegiatan = document.getElementById('photo-kegiatan')?.value;
+        const url = document.getElementById('photo-url')?.value;
+        const deskripsi = document.getElementById('photo-deskripsi')?.value;
+        
+        if (!tanggal || !kegiatan || !url) {
+            this.showNotification('Tanggal, kegiatan, dan URL foto wajib diisi', 'error');
+            return;
+        }
+        
+        const data = {
+            tanggal: tanggal,
+            kegiatan: kegiatan,
+            url: url,
+            deskripsi: deskripsi || ''
+        };
+        
+        this.showNotification('Menyimpan foto ke spreadsheet...', 'info');
+        
+        const result = await this.saveToAPI(CONFIG.SHEETS.FOTO, data);
+        
+        if (result.success) {
+            document.getElementById('photo-kegiatan').value = '';
+            document.getElementById('photo-url').value = '';
+            document.getElementById('photo-deskripsi').value = '';
+            
+            this.showNotification('Foto berhasil disimpan ke spreadsheet', 'success');
+        }
+    }
+    
+    // ============================================
+    // UTILITY FUNCTIONS
+    // ============================================
+    
+    switchTab(tab) {
+        const tabs = ['spmb', 'agenda', 'photo'];
+        
+        tabs.forEach(t => {
+            const btn = document.getElementById(`tab-${t}`);
+            const form = document.getElementById(`form-${t}`);
+            
+            if (t === tab) {
+                if (btn) {
+                    btn.className = 'tab-btn px-5 py-2.5 rounded-button bg-primary text-white font-medium';
+                }
+                if (form) {
+                    form.classList.remove('hidden');
+                }
+            } else {
+                if (btn) {
+                    btn.className = 'tab-btn px-5 py-2.5 rounded-button border border-border text-foreground font-medium hover:border-primary';
+                }
+                if (form) {
+                    form.classList.add('hidden');
+                }
+            }
+        });
+        
+        lucide.createIcons();
+    }
+    
+    showNotification(message, type = 'info') {
+        if (window.auth) {
+            window.auth.showNotification(message, type);
+        } else {
+            alert(message);
+        }
+    }
+    
+    showLoading(show) {
+        const loading = document.getElementById('loading-screen');
+        if (loading) {
+            if (show) {
+                loading.classList.remove('hidden');
+            } else {
+                loading.classList.add('hidden');
+            }
+        }
+    }
+    
+    refreshData() {
+        this.loadData();
+        this.showNotification('Menyegarkan data dari spreadsheet...', 'info');
+    }
+    
+    testConnection() {
+        return this.testConnection();
+    }
+    
+    exportData(type) {
+        this.showNotification('Fitur export dalam pengembangan', 'info');
+    }
+    
+    showPhoto(url) {
+        window.open(url, '_blank');
+    }
+    
+    // ============================================
+    // PLACEHOLDER FUNCTIONS
+    // ============================================
+    
+    renderComparisonPage() {
+        return `<div class="p-8 text-center text-gray-500">Halaman perbandingan dalam pengembangan</div>`;
+    }
+    
+    renderAgendaList() {
+        return `<div class="p-8 text-center text-gray-500">Halaman daftar agenda dalam pengembangan</div>`;
+    }
+    
+    renderGallery() {
+        return `<div class="p-8 text-center text-gray-500">Halaman galeri foto dalam pengembangan</div>`;
+    }
+    
+    renderSPMBDataTable() {
+        return `<div class="p-8 text-center text-gray-500">Halaman data SPMB dalam pengembangan</div>`;
+    }
+    
+    renderSettings() {
+        return `<div class="p-8 text-center text-gray-500">Halaman pengaturan dalam pengembangan</div>`;
+    }
+    
+    initDashboardCharts() {
+        // Chart implementation
+    }
 }
 
-// Initialize app when auth is ready
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait a bit for auth to initialize
-    setTimeout(() => {
-        window.app = new DashboardApp();
-    }, 500);
-});
+// Inisialisasi aplikasi
+window.app = new SPMBApp();
