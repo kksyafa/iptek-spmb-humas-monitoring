@@ -97,7 +97,7 @@ class SPMBApp {
     async fetchFromAPI(action, params = {}) {
         try {
             // CEK APAKAH WEB APP URL SUDAH DIKONFIGURASI
-            if (!CONFIG.WEB_APP_URL || CONFIG.WEB_APP_URL.includes('YOUR_SCRIPT_ID')) {
+            if (!CONFIG.WEB_APP_URL || CONFIG.WEB_APP_URL.includes('SPREADSHEET_ID')) {
                 console.warn('⚠️ WEB_APP_URL belum dikonfigurasi');
                 return { success: false, error: 'API not configured' };
             }
@@ -146,7 +146,7 @@ class SPMBApp {
     async saveToAPI(sheetName, data) {
         try {
             // CEK APAKAH WEB APP URL SUDAH DIKONFIGURASI
-            if (!CONFIG.WEB_APP_URL || CONFIG.WEB_APP_URL.includes('YOUR_SCRIPT_ID')) {
+            if (!CONFIG.WEB_APP_URL || CONFIG.WEB_APP_URL.includes('SPREADSHEET_ID')) {
                 this.showNotification('⚠️ API belum dikonfigurasi. Edit config.js terlebih dahulu.', 'warning');
                 return { success: false };
             }
