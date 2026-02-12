@@ -11,7 +11,7 @@ const CONFIG = {
     SPREADSHEET_ID: '1fnk5hFLA9q-ZH9NoGQPD_dP0qIQTAT9piPWLkPbFLNE',
     
     // Google Apps Script Web App URL (setelah deploy)
-    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbz1_rL0N24KmbVZE8AemOnDok_cQjInxpgvLquWFgGgtguDcPBZbKvNudHd8NDokvV-/exec',
+    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzxz0elkrBX1ieKAVFCSS9591iU-9l5YDpe0eW1qf3JtCkQleCct8PwWOwLZ_eZ8bnC/exec',
     
     // ============================================
     // KONFIGURASI APLIKASI - JANGAN DIUBAH
