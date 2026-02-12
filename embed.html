@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPMB & Humas Monitoring - Embed Version</title>
+    <title>SPMB & Humas - Embedded Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         * {
             margin: 0;
@@ -12,265 +15,372 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #f5f7fa;
-            padding: 20px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f8fafc;
+            padding: 0;
+            margin: 0;
         }
         
         .embed-container {
-            max-width: 100%;
+            max-width: 1200px;
             margin: 0 auto;
-        }
-        
-        .embed-header {
-            text-align: center;
-            margin-bottom: 30px;
             padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .embed-header h1 {
-            color: #2c3e50;
-            margin: 0;
-            font-size: 24px;
+        /* Tanpa footer */
+        footer {
+            display: none;
         }
         
-        .embed-header p {
-            color: #7f8c8d;
-            margin: 5px 0 0 0;
+        /* Hide sidebar and header for embed */
+        .sidebar,
+        .app-header,
+        .mobile-header {
+            display: none !important;
         }
         
-        .embed-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
         
-        .stat-box {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-            border-left: 5px solid #3498db;
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
         
-        .stat-box.smk {
-            border-left-color: #9b59b6;
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
         }
         
-        .stat-value {
-            font-size: 32px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin: 10px 0;
-        }
-        
-        .stat-label {
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-        
-        .embed-table {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-            margin-top: 20px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th {
-            background: #2c3e50;
-            color: white;
-            padding: 15px;
-            text-align: left;
-            font-weight: 500;
-        }
-        
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .status {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .status.completed {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status.ongoing {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .refresh-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 20px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .refresh-btn:hover {
-            background: #2980b9;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
 </head>
 <body>
     <div class="embed-container">
-        <div class="embed-header">
-            <h1>Dashboard Monitoring SPMB & Agenda Humas</h1>
-            <p>Yayasan Insan Pendidikan Teknologi & Kejuruan - Update Real-time</p>
-        </div>
-        
-        <button class="refresh-btn" onclick="loadData()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M23 4v6h-6"></path>
-                <path d="M1 20v-6h6"></path>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-            </svg>
-            Refresh Data
-        </button>
-        
-        <div class="embed-stats">
-            <div class="stat-box">
-                <div class="stat-label">Penerimaan SMP</div>
-                <div class="stat-value" id="stat-smp">0</div>
-                <div class="stat-sub">Siswa</div>
-            </div>
-            
-            <div class="stat-box smk">
-                <div class="stat-label">Penerimaan SMK</div>
-                <div class="stat-value" id="stat-smk">0</div>
-                <div class="stat-sub">Siswa</div>
-            </div>
-            
-            <div class="stat-box">
-                <div class="stat-label">Agenda Aktif</div>
-                <div class="stat-value" id="stat-agenda">0</div>
-                <div class="stat-sub">Kegiatan</div>
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-[#EF3F09] rounded-full flex items-center justify-center">
+                        <i data-lucide="graduation-cap" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-[#0C1C3C] text-xl font-bold">SPMB & Humas Monitoring</h1>
+                        <p class="text-gray-500 text-sm">Yayasan Insan Pendidikan Teknologi & Kejuruan • Real-time Data</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-gray-500" id="last-update">Memuat...</span>
+                    <button onclick="refreshEmbedData()" class="p-2 hover:bg-gray-100 rounded-lg transition-all">
+                        <i data-lucide="refresh-cw" class="w-4 h-4 text-gray-600"></i>
+                    </button>
+                </div>
             </div>
         </div>
-        
-        <div class="embed-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th>Kegiatan</th>
-                        <th>Lokasi</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="agenda-table">
-                    <tr>
-                        <td colspan="4" style="text-align: center;">Memuat data...</td>
-                    </tr>
-                </tbody>
-            </table>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" id="embed-stats">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border-l-4 border-[#3498db]">
+                <p class="text-gray-500 text-sm mb-1">Total SMP</p>
+                <p class="text-[#0C1C3C] text-3xl font-bold" id="stat-smp">0</p>
+                <p class="text-xs text-gray-400 mt-1">Pendaftar</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border-l-4 border-[#9b59b6]">
+                <p class="text-gray-500 text-sm mb-1">Total SMK</p>
+                <p class="text-[#0C1C3C] text-3xl font-bold" id="stat-smk">0</p>
+                <p class="text-xs text-gray-400 mt-1">Pendaftar</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border-l-4 border-[#10B981]">
+                <p class="text-gray-500 text-sm mb-1">Early Bird</p>
+                <p class="text-[#0C1C3C] text-3xl font-bold" id="stat-earlybird">0</p>
+                <p class="text-xs text-gray-400 mt-1">Pendaftar</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border-l-4 border-[#8B5CF6]">
+                <p class="text-gray-500 text-sm mb-1">Gelombang 2</p>
+                <p class="text-[#0C1C3C] text-3xl font-bold" id="stat-gelombang2">0</p>
+                <p class="text-xs text-gray-400 mt-1">Pendaftar</p>
+            </div>
         </div>
-        
-        <div style="text-align: center; margin-top: 30px; color: #7f8c8d; font-size: 12px;">
-            <p>Update terakhir: <span id="last-update">-</span></p>
-            <p>© 2026 Yayasan Insan Pendidikan Teknologi & Teknologi</p>
+
+        <!-- Periode Breakdown -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm">
+                <h3 class="text-[#0C1C3C] font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="school" class="w-5 h-5 text-[#3498db]"></i>
+                    SMP
+                </h3>
+                <div class="space-y-4" id="embed-smp-data">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Early Bird:</span>
+                        <span class="font-semibold" id="smp-earlybird">0</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Gelombang 1:</span>
+                        <span class="font-semibold" id="smp-gel1">0</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Gelombang 2:</span>
+                        <span class="font-semibold" id="smp-gel2">0</span>
+                    </div>
+                    <div class="flex justify-between text-sm pt-2 border-t">
+                        <span class="font-medium">Total:</span>
+                        <span class="font-bold text-[#EF3F09]" id="smp-total">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-6 shadow-sm">
+                <h3 class="text-[#0C1C3C] font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="graduation-cap" class="w-5 h-5 text-[#9b59b6]"></i>
+                    SMK
+                </h3>
+                <div class="space-y-4" id="embed-smk-data">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Early Bird:</span>
+                        <span class="font-semibold" id="smk-earlybird">0</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Gelombang 1:</span>
+                        <span class="font-semibold" id="smk-gel1">0</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Gelombang 2:</span>
+                        <span class="font-semibold" id="smk-gel2">0</span>
+                    </div>
+                    <div class="flex justify-between text-sm pt-2 border-t">
+                        <span class="font-medium">Total:</span>
+                        <span class="font-bold text-[#EF3F09]" id="smk-total">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Agenda -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm">
+            <h3 class="text-[#0C1C3C] font-bold mb-4">Agenda Terbaru</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tanggal</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Kegiatan</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Lokasi</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="embed-agenda" class="divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+                                Memuat data agenda...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Update Info - Tanpa Footer -->
+        <div class="mt-6 text-center text-xs text-gray-400">
+            <span>Data real-time dari Google Spreadsheet</span>
+            <span class="mx-2">•</span>
+            <span>Update setiap 5 menit</span>
         </div>
     </div>
-    
+
     <script>
-        async function loadData() {
+        // Konfigurasi - Sesuaikan dengan Web App URL Anda
+        const EMBED_CONFIG = {
+            WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbz1_rL0N24KmbVZE8AemOnDok_cQjInxpgvLquWFgGgtguDcPBZbKvNudHd8NDokvV-/exec',
+            ACADEMIC_YEAR: '2026/2027'
+        };
+
+        // Load data saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            loadEmbedData();
+            
+            // Auto refresh setiap 5 menit
+            setInterval(loadEmbedData, 5 * 60 * 1000);
+        });
+
+        // Fungsi untuk memuat data dari spreadsheet
+        async function loadEmbedData() {
             try {
-                // Simulate data loading
-                const mockData = {
-                    spmbSMP: { total: 80 },
-                    spmbSMK: { total: 280 },
-                    agenda: [
-                        {
-                            tanggal: '2024-06-15',
-                            kegiatan: 'Open House SMP',
-                            lokasi: 'Kampus Utama',
-                            status: 'completed'
-                        },
-                        {
-                            tanggal: '2024-06-20',
-                            kegiatan: 'Workshop Teknologi',
-                            lokasi: 'Lab Komputer',
-                            status: 'ongoing'
-                        },
-                        {
-                            tanggal: '2024-06-25',
-                            kegiatan: 'Pameran Pendidikan',
-                            lokasi: 'Mall Kota',
-                            status: 'scheduled'
-                        }
-                    ]
-                };
+                document.getElementById('last-update').textContent = 'Memuat data...';
                 
-                // Update stats
-                document.getElementById('stat-smp').textContent = mockData.spmbSMP.total;
-                document.getElementById('stat-smk').textContent = mockData.spmbSMK.total;
-                document.getElementById('stat-agenda').textContent = mockData.agenda.length;
+                const url = `${EMBED_CONFIG.WEB_APP_URL}?action=getAll&_=${Date.now()}`;
+                const response = await fetch(url, {
+                    mode: 'cors',
+                    cache: 'no-cache'
+                });
                 
-                // Update table
-                const tableBody = document.getElementById('agenda-table');
-                tableBody.innerHTML = mockData.agenda.map(item => `
-                    <tr>
-                        <td>${item.tanggal}</td>
-                        <td>${item.kegiatan}</td>
-                        <td>${item.lokasi}</td>
-                        <td>
-                            <span class="status ${item.status}">
-                                ${item.status === 'completed' ? 'Selesai' : 
-                                  item.status === 'ongoing' ? 'Berlangsung' : 'Terjadwal'}
-                            </span>
-                        </td>
-                    </tr>
-                `).join('');
+                if (!response.ok) throw new Error('Network response was not ok');
                 
-                // Update timestamp
-                const now = new Date();
-                document.getElementById('last-update').textContent = 
-                    now.toLocaleDateString('id-ID') + ' ' + now.toLocaleTimeString('id-ID');
-                    
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    processEmbedData(result.data);
+                    document.getElementById('last-update').textContent = 
+                        `Update: ${new Date().toLocaleString('id-ID')}`;
+                } else {
+                    // Fallback ke mock data
+                    loadMockEmbedData();
+                }
             } catch (error) {
-                console.error('Error loading data:', error);
-                document.getElementById('agenda-table').innerHTML = `
+                console.error('Error loading embed data:', error);
+                loadMockEmbedData();
+            }
+        }
+
+        // Fungsi untuk memproses data dari spreadsheet
+        function processEmbedData(data) {
+            // Proses data SPMB
+            const spmbData = data.spmb_smp || [];
+            
+            // Hitung total per unit dan periode
+            let smpTotal = 0, smkTotal = 0;
+            let smpEarly = 0, smpGel1 = 0, smpGel2 = 0;
+            let smkEarly = 0, smkGel1 = 0, smkGel2 = 0;
+            
+            // Filter berdasarkan tahun ajaran
+            const filteredData = spmbData.filter(item => 
+                item.tahun_ajaran === EMBED_CONFIG.ACADEMIC_YEAR
+            );
+            
+            filteredData.forEach(item => {
+                const unit = item.unit;
+                const periode = item.periode;
+                const pendaftar = parseInt(item.jumlah_pendaftar) || 0;
+                
+                if (unit === 'SMP') {
+                    smpTotal += pendaftar;
+                    if (periode === 'earlybird') smpEarly += pendaftar;
+                    if (periode === 'gelombang1') smpGel1 += pendaftar;
+                    if (periode === 'gelombang2') smpGel2 += pendaftar;
+                } else if (unit === 'SMK') {
+                    smkTotal += pendaftar;
+                    if (periode === 'earlybird') smkEarly += pendaftar;
+                    if (periode === 'gelombang1') smkGel1 += pendaftar;
+                    if (periode === 'gelombang2') smkGel2 += pendaftar;
+                }
+            });
+
+            // Update UI dengan data real
+            document.getElementById('stat-smp').textContent = smpTotal;
+            document.getElementById('stat-smk').textContent = smkTotal;
+            document.getElementById('stat-earlybird').textContent = smpEarly + smkEarly;
+            document.getElementById('stat-gelombang2').textContent = smpGel2 + smkGel2;
+            
+            // Update SMP data
+            document.getElementById('smp-earlybird').textContent = smpEarly;
+            document.getElementById('smp-gel1').textContent = smpGel1;
+            document.getElementById('smp-gel2').textContent = smpGel2;
+            document.getElementById('smp-total').textContent = smpTotal;
+            
+            // Update SMK data
+            document.getElementById('smk-earlybird').textContent = smkEarly;
+            document.getElementById('smk-gel1').textContent = smkGel1;
+            document.getElementById('smk-gel2').textContent = smkGel2;
+            document.getElementById('smk-total').textContent = smkTotal;
+            
+            // Update agenda
+            const agendas = data.agenda_humas || [];
+            renderEmbedAgenda(agendas.slice(0, 5));
+        }
+
+        // Fungsi untuk render agenda di embed
+        function renderEmbedAgenda(agendas) {
+            const tbody = document.getElementById('embed-agenda');
+            
+            if (!agendas || agendas.length === 0) {
+                tbody.innerHTML = `
                     <tr>
-                        <td colspan="4" style="text-align: center; color: #e74c3c;">
-                            Gagal memuat data
+                        <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+                            Belum ada agenda
                         </td>
                     </tr>
                 `;
+                return;
             }
+            
+            tbody.innerHTML = agendas.map(agenda => {
+                let statusClass = '';
+                let statusText = '';
+                
+                switch(agenda.status) {
+                    case 'completed':
+                        statusClass = 'bg-success-light text-success-dark';
+                        statusText = 'Selesai';
+                        break;
+                    case 'ongoing':
+                        statusClass = 'bg-warning-light text-warning-dark';
+                        statusText = 'Berlangsung';
+                        break;
+                    default:
+                        statusClass = 'bg-info-light text-info-dark';
+                        statusText = 'Terjadwal';
+                }
+                
+                return `
+                    <tr>
+                        <td class="px-4 py-3 text-sm">${agenda.tanggal || '-'}</td>
+                        <td class="px-4 py-3 text-sm font-medium">${agenda.kegiatan || '-'}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${agenda.lokasi || '-'}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <span class="px-2 py-1 text-xs rounded-full ${statusClass}">${statusText}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            lucide.createIcons();
         }
-        
-        // Load data on page load
-        document.addEventListener('DOMContentLoaded', loadData);
-        
-        // Auto-refresh every 5 minutes
-        setInterval(loadData, 5 * 60 * 1000);
+
+        // Mock data untuk fallback
+        function loadMockEmbedData() {
+            const mockData = {
+                spmb_smp: [
+                    { unit: 'SMP', tahun_ajaran: '2026/2027', periode: 'earlybird', jumlah_pendaftar: 45 },
+                    { unit: 'SMP', tahun_ajaran: '2026/2027', periode: 'gelombang1', jumlah_pendaftar: 58 },
+                    { unit: 'SMP', tahun_ajaran: '2026/2027', periode: 'gelombang2', jumlah_pendaftar: 48 },
+                    { unit: 'SMK', tahun_ajaran: '2026/2027', periode: 'earlybird', jumlah_pendaftar: 68 },
+                    { unit: 'SMK', tahun_ajaran: '2026/2027', periode: 'gelombang1', jumlah_pendaftar: 78 },
+                    { unit: 'SMK', tahun_ajaran: '2026/2027', periode: 'gelombang2', jumlah_pendaftar: 58 }
+                ],
+                agenda_humas: [
+                    {
+                        tanggal: '2026-06-15',
+                        kegiatan: 'Open House SMP',
+                        lokasi: 'Aula Utama',
+                        status: 'completed'
+                    },
+                    {
+                        tanggal: '2026-06-20',
+                        kegiatan: 'Workshop Teknologi',
+                        lokasi: 'Lab Komputer',
+                        status: 'ongoing'
+                    },
+                    {
+                        tanggal: '2026-06-25',
+                        kegiatan: 'Pameran Pendidikan',
+                        lokasi: 'Mall Kota',
+                        status: 'scheduled'
+                    }
+                ]
+            };
+            
+            processEmbedData({ data: mockData });
+            document.getElementById('last-update').textContent = 
+                `Update: ${new Date().toLocaleString('id-ID')} (Data Demo)`;
+        }
+
+        // Manual refresh
+        function refreshEmbedData() {
+            loadEmbedData();
+        }
     </script>
 </body>
 </html>
