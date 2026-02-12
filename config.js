@@ -1,15 +1,14 @@
+// ============================================
+// KONFIGURASI - GANTI DENGAN DATA ANDA!
+// ============================================
 const CONFIG = {
-    // ============================================
-    // ⚠️ GANTI DENGAN DATA ASLI ANDA! ⚠️
-    // ============================================
+    // ⚠️ WAJIB GANTI! Spreadsheet ID dari URL
+    SPREADSHEET_ID: '1fnk5hFLA9q-ZH9NoGQPD_dP0qIQTAT9piPWLkPbFLNE', // GANTI!
     
-    SPREADSHEET_ID: '1fnk5hFLA9q-ZH9NoGQPD_dP0qIQTAT9piPWLkPbFLNE', // GANTI INI!
-    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzXyTjyLKgRzoSFyRKByPuaDT_8MZDNx_6jSQQ00RktxbJYQucTxpZKcsTlKdh0qFWD/exec', // GANTI INI!
+    // ⚠️ WAJIB GANTI! Web App URL hasil deploy
+    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzXyTjyLKgRzoSFyRKByPuaDT_8MZDNx_6jSQQ00RktxbJYQucTxpZKcsTlKdh0qFWD/exec', // GANTI!
     
-    // ============================================
-    // JANGAN UBAH DI BAWAH INI
-    // ============================================
-    
+    // JANGAN UBAH DI BAWAH INI!
     SHEETS: {
         SPMB_SMP: 'SPMB_SMP',
         SPMB_SMK: 'SPMB_SMK',
