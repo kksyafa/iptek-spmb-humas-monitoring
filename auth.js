@@ -1,83 +1,91 @@
-// Authentication System for SPMB Monitoring
+// ============================================
+// SISTEM AUTHENTIKASI - TERINTEGRASI DENGAN SPREADSHEET
+// ============================================
 
 class AuthSystem {
     constructor() {
         this.currentUser = null;
         this.isAuthenticated = false;
-        this.sessionToken = null;
+        this.token = null;
         
         this.init();
     }
     
     init() {
-        this.checkExistingSession();
+        this.checkSession();
         this.setupEventListeners();
     }
     
-    checkExistingSession() {
-        // Check if user is already logged in
-        const userData = localStorage.getItem('spmb_user');
-        const token = localStorage.getItem('spmb_token');
+    checkSession() {
+        const savedUser = localStorage.getItem('spmb_user');
+        const savedToken = localStorage.getItem('spmb_token');
         
-        if (userData && token) {
+        if (savedUser && savedToken) {
             try {
-                this.currentUser = JSON.parse(userData);
-                this.sessionToken = token;
+                this.currentUser = JSON.parse(savedUser);
+                this.token = savedToken;
                 this.isAuthenticated = true;
                 
-                // Show app and hide login
-                this.showApp();
+                // Update UI
                 this.updateUserInfo();
+                this.hideLogin();
                 
-                console.log('User session restored:', this.currentUser.username);
-            } catch (error) {
-                console.error('Error parsing user data:', error);
+                console.log('Session restored:', this.currentUser.username);
+                return true;
+            } catch (e) {
+                console.error('Error parsing user data:', e);
                 this.clearSession();
             }
         }
+        return false;
     }
     
     setupEventListeners() {
         // Login button
-        document.getElementById('btn-login')?.addEventListener('click', () => this.handleLogin());
+        const loginBtn = document.getElementById('login-btn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => this.handleLogin());
+        }
+        
+        // Enter key on password field
+        const passwordField = document.getElementById('login-password');
+        if (passwordField) {
+            passwordField.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.handleLogin();
+            });
+        }
         
         // Logout button
-        document.getElementById('btn-logout')?.addEventListener('click', () => this.handleLogout());
-        
-        // Enter key in password field
-        document.getElementById('login-password')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.handleLogin();
-        });
-        
-        // Mobile menu toggle
-        document.getElementById('menu-toggle')?.addEventListener('click', () => {
-            document.getElementById('sidebar').classList.toggle('active');
-        });
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => this.handleLogout());
+        }
     }
     
     async handleLogin() {
-        const username = document.getElementById('login-username').value.trim();
-        const password = document.getElementById('login-password').value;
+        const username = document.getElementById('login-username')?.value.trim();
+        const password = document.getElementById('login-password')?.value;
         
-        // Validation
         if (!username || !password) {
             this.showNotification('Username dan password harus diisi', 'error');
             return;
         }
         
-        // Try to authenticate with Google Sheets first
+        this.showNotification('Memverifikasi kredensial...', 'info');
+        
         try {
-            const authResult = await this.authenticateWithAPI(username, password);
+            // Coba autentikasi melalui Google Sheets API
+            const result = await this.authenticateWithAPI(username, password);
             
-            if (authResult.success) {
-                this.loginSuccess(authResult.user, authResult.token);
+            if (result.success) {
+                this.loginSuccess(result.user, result.token);
             } else {
-                // Fallback to default users
+                // Fallback ke default users jika API gagal
                 this.authenticateWithDefaults(username, password);
             }
         } catch (error) {
-            console.error('API authentication failed:', error);
-            // Fallback to default users
+            console.error('API authentication error:', error);
+            // Fallback ke default users
             this.authenticateWithDefaults(username, password);
         }
     }
@@ -86,6 +94,7 @@ class AuthSystem {
         try {
             const response = await fetch(CONFIG.WEB_APP_URL, {
                 method: 'POST',
+                mode: 'cors',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -97,12 +106,12 @@ class AuthSystem {
             });
             
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`HTTP ${response.status}`);
             }
             
             return await response.json();
         } catch (error) {
-            console.error('API authentication error:', error);
+            console.error('API authentication failed:', error);
             throw error;
         }
     }
@@ -113,8 +122,7 @@ class AuthSystem {
         );
         
         if (user) {
-            // Generate mock token for default users
-            const token = this.generateToken(user.username);
+            const token = this.generateToken();
             this.loginSuccess(user, token);
         } else {
             this.showNotification('Username atau password salah', 'error');
@@ -123,124 +131,163 @@ class AuthSystem {
     
     loginSuccess(user, token) {
         this.currentUser = user;
-        this.sessionToken = token;
+        this.token = token;
         this.isAuthenticated = true;
         
-        // Save to localStorage
+        // Simpan ke localStorage
         localStorage.setItem('spmb_user', JSON.stringify(user));
         localStorage.setItem('spmb_token', token);
         
         // Update UI
-        this.showApp();
         this.updateUserInfo();
+        this.hideLogin();
         
-        // Show success message
         this.showNotification(`Selamat datang, ${user.name}!`, 'success');
         
-        // Load initial data
-        if (window.app) {
-            window.app.loadInitialData();
-        }
+        // Trigger event untuk aplikasi
+        const event = new CustomEvent('auth:login', { detail: { user } });
+        window.dispatchEvent(event);
     }
     
     handleLogout() {
         this.clearSession();
         this.showLogin();
         this.showNotification('Anda telah logout', 'info');
+        
+        const event = new CustomEvent('auth:logout');
+        window.dispatchEvent(event);
     }
     
     clearSession() {
         this.currentUser = null;
-        this.sessionToken = null;
+        this.token = null;
         this.isAuthenticated = false;
         
         localStorage.removeItem('spmb_user');
         localStorage.removeItem('spmb_token');
     }
     
-    showApp() {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'grid';
-    }
-    
     showLogin() {
-        document.getElementById('login-screen').style.display = 'flex';
-        document.getElementById('app').style.display = 'none';
+        const loginModal = document.getElementById('login-modal');
+        if (loginModal) {
+            loginModal.classList.remove('hidden');
+        }
         
-        // Clear login form
-        document.getElementById('login-username').value = '';
-        document.getElementById('login-password').value = '';
-    }
-    
-    updateUserInfo() {
-        if (this.currentUser) {
-            document.getElementById('current-user').textContent = this.currentUser.name;
-            document.getElementById('current-role').textContent = this.currentUser.role;
+        const app = document.getElementById('app');
+        if (app) {
+            app.style.display = 'none';
         }
     }
     
-    generateToken(username) {
-        return 'token_' + Date.now() + '_' + username + '_' + Math.random().toString(36).substr(2);
+    hideLogin() {
+        const loginModal = document.getElementById('login-modal');
+        if (loginModal) {
+            loginModal.classList.add('hidden');
+        }
+        
+        const app = document.getElementById('app');
+        if (app) {
+            app.style.display = 'block';
+        }
     }
     
-    showNotification(message, type = 'info') {
-        const notifications = document.getElementById('notifications');
-        const notification = document.createElement('div');
+    updateUserInfo() {
+        if (!this.currentUser) return;
         
-        let icon = 'info-circle';
-        if (type === 'success') icon = 'check-circle';
-        if (type === 'error') icon = 'exclamation-circle';
-        if (type === 'warning') icon = 'exclamation-triangle';
+        // Update semua elemen user info
+        const userNameElements = document.querySelectorAll('.user-name');
+        userNameElements.forEach(el => {
+            el.textContent = this.currentUser.name;
+        });
         
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <i class="fas fa-${icon}"></i>
-            <span>${message}</span>
-        `;
+        const userRoleElements = document.querySelectorAll('.user-role');
+        userRoleElements.forEach(el => {
+            el.textContent = this.currentUser.role;
+        });
         
-        notifications.appendChild(notification);
+        // Update sidebar user info
+        const sidebarUserName = document.getElementById('sidebar-user-name');
+        if (sidebarUserName) sidebarUserName.textContent = this.currentUser.name;
         
-        // Remove after 5 seconds
-        setTimeout(() => {
-            notification.style.animation = 'slideIn 0.3s ease-out reverse';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 5000);
+        const sidebarUserRole = document.getElementById('sidebar-user-role');
+        if (sidebarUserRole) sidebarUserRole.textContent = this.currentUser.role;
     }
     
-    // Check if user has permission for specific action
+    generateToken() {
+        return 'token_' + Date.now() + '_' + Math.random().toString(36).substr(2, 16);
+    }
+    
+    // Cek permission
     hasPermission(requiredRole, requiredUnit = null) {
         if (!this.isAuthenticated) return false;
         
-        // Admin has all permissions
-        if (this.currentUser.role === 'admin') return true;
+        // Admin punya akses penuh
+        if (this.currentUser.role === 'Admin') return true;
         
-        // Check role
-        const roleHierarchy = {
-            'admin': 3,
-            'coordinator': 2,
-            'staff': 1,
-            'user': 0
-        };
+        // Cek role
+        if (requiredRole) {
+            const roleLevel = {
+                'Admin': 3,
+                'Ketua SMP': 2,
+                'Ketua SMK': 2,
+                'Staf Humas': 1
+            };
+            
+            const userLevel = roleLevel[this.currentUser.role] || 0;
+            const requiredLevel = roleLevel[requiredRole] || 0;
+            
+            if (userLevel < requiredLevel) return false;
+        }
         
-        const userRoleLevel = roleHierarchy[this.currentUser.role] || 0;
-        const requiredRoleLevel = roleHierarchy[requiredRole] || 0;
-        
-        if (userRoleLevel < requiredRoleLevel) return false;
-        
-        // Check unit if specified
+        // Cek unit
         if (requiredUnit && this.currentUser.unit !== 'all' && this.currentUser.unit !== requiredUnit) {
             return false;
         }
         
         return true;
     }
+    
+    // Notifikasi
+    showNotification(message, type = 'info') {
+        const container = document.getElementById('notifications');
+        if (!container) return;
+        
+        const icons = {
+            success: 'check-circle',
+            error: 'alert-circle',
+            warning: 'alert-triangle',
+            info: 'info'
+        };
+        
+        const colors = {
+            success: 'bg-success-light text-success-dark border-success',
+            error: 'bg-error-light text-error-dark border-error',
+            warning: 'bg-warning-light text-warning-dark border-warning',
+            info: 'bg-info-light text-info-dark border-info'
+        };
+        
+        const notification = document.createElement('div');
+        notification.className = `flex items-center gap-3 p-4 rounded-card border-l-4 ${colors[type]} animate-slide-in`;
+        notification.innerHTML = `
+            <i data-lucide="${icons[type]}" class="w-5 h-5 flex-shrink-0"></i>
+            <span class="flex-1 text-sm font-medium">${message}</span>
+            <button onclick="this.parentElement.remove()" class="hover:opacity-70">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        `;
+        
+        container.appendChild(notification);
+        lucide.createIcons();
+        
+        // Auto remove setelah 5 detik
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
+            notification.style.transition = 'all 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
+    }
 }
 
-// Initialize auth system when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.auth = new AuthSystem();
-});
+// Inisialisasi auth system
+window.auth = new AuthSystem();
