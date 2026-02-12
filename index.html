@@ -1207,43 +1207,79 @@
         });
     }
     
-    // ============================================
-    // SAVE FUNCTIONS
-    // ============================================
-    function saveSPMBData() {
+    async function saveSPMBData() {
         const unit = document.getElementById('input-unit').value;
         const periode = document.getElementById('input-periode').value;
         const pendaftar = parseInt(document.getElementById('input-pendaftar').value) || 0;
         const formulir = parseInt(document.getElementById('input-formulir').value) || 0;
         const dsp = parseInt(document.getElementById('input-dsp').value) || 0;
+        const keterangan = document.getElementById('input-keterangan').value;
         
         if (pendaftar <= 0) {
             showNotification('Jumlah pendaftar harus diisi!', 'error');
             return;
         }
         
-        // Update data
-        spmbData[unit][periode].pendaftar += pendaftar;
-        spmbData[unit][periode].formulir += formulir;
-        spmbData[unit][periode].dsp += dsp;
+        // Tampilkan loading
+        showNotification('Menyimpan data ke spreadsheet...', 'info');
         
-        // Update total
-        spmbData[unit].total.pendaftar += pendaftar;
-        spmbData[unit].total.formulir += formulir;
-        spmbData[unit].total.dsp += dsp;
-        
-        // Clear form
-        document.getElementById('input-pendaftar').value = '';
-        document.getElementById('input-formulir').value = '';
-        document.getElementById('input-dsp').value = '';
-        document.getElementById('input-keterangan').value = '';
-        
-        showNotification('Data SPMB berhasil disimpan!', 'success');
-        
-        // Redirect ke halaman yang sesuai
-        setTimeout(() => {
-            navigateTo(unit === 'SMP' ? 'spmb-smp' : 'spmb-smk');
-        }, 1500);
+        try {
+            // Siapkan data
+            const data = {
+                unit: unit,
+                tahun_ajaran: '2026/2027',
+                periode: periode,
+                tanggal_input: new Date().toISOString().split('T')[0],
+                jumlah_pendaftar: pendaftar,
+                jumlah_bayar_formulir: formulir,
+                jumlah_bayar_dsp: dsp,
+                keterangan: keterangan || '-',
+                created_by: currentUser?.name || 'admin'
+            };
+            
+            // Tentukan sheet name
+            const sheetName = unit === 'SMP' ? 'SPMB_SMP' : 'SPMB_SMK';
+            
+            // Kirim ke Web App
+            const response = await fetch(CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Google Apps Script requires no-cors
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'save',
+                    sheet: sheetName,
+                    data: data
+                })
+            });
+            
+            // Update data lokal
+            spmbData[unit][periode].pendaftar += pendaftar;
+            spmbData[unit][periode].formulir += formulir;
+            spmbData[unit][periode].dsp += dsp;
+            
+            spmbData[unit].total.pendaftar += pendaftar;
+            spmbData[unit].total.formulir += formulir;
+            spmbData[unit].total.dsp += dsp;
+            
+            // Clear form
+            document.getElementById('input-pendaftar').value = '';
+            document.getElementById('input-formulir').value = '';
+            document.getElementById('input-dsp').value = '';
+            document.getElementById('input-keterangan').value = '';
+            
+            showNotification('✅ Data berhasil disimpan ke spreadsheet!', 'success');
+            
+            // Redirect ke halaman yang sesuai
+            setTimeout(() => {
+                navigateTo(unit === 'SMP' ? 'spmb-smp' : 'spmb-smk');
+            }, 1500);
+            
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('❌ Gagal menyimpan ke spreadsheet', 'error');
+        }
     }
     
     function saveAgendaData() {
