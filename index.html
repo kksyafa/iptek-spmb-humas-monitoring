@@ -2,30 +2,80 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPMB & Humas - Dashboard Monitoring</title>
-    <meta name="description" content="Dashboard Monitoring SPMB dan Agenda Humas - Data real-time dari Google Spreadsheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+    <title>SPMB & Humas · Dashboard Monitoring</title>
+    <meta name="description" content="Dashboard monitoring SPMB dan Agenda Humas - Real-time dari Google Spreadsheet">
     
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts - Inter Modern -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <!-- Configuration -->
-    <script src="config.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
     <style>
-        /* Hide footer - sesuai permintaan */
-        footer, .footer {
-            display: none !important;
+        /* Custom styles */
+        :root {
+            --primary: #f97316;
+            --primary-dark: #ea580c;
+            --primary-light: #ffedd5;
+            --secondary: #0f172a;
+            --accent-1: #3b82f6;
+            --accent-2: #8b5cf6;
+            --accent-3: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #6366f1;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
         }
         
-        /* Loading animation */
-        #loading-screen {
-            transition: opacity 0.5s ease;
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: var(--gray-900);
+        }
+        
+        /* Card glassmorphism effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.02);
+        }
+        
+        /* Stat card hover effect */
+        .stat-card {
+            transition: all 0.2s ease;
+            border-radius: 24px;
+            background: white;
+            box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.02), 0 12px 16px -4px rgba(0, 0, 0, 0.02);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+        }
+        
+        /* Modern sidebar */
+        .sidebar {
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            color: white;
         }
         
         /* Custom scrollbar */
@@ -35,118 +85,144 @@
         }
         
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: #f1f5f9;
         }
         
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
+            background: #94a3b8;
             border-radius: 3px;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            background: #64748b;
         }
         
         /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
         @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
         
         .animate-slide-in {
             animation: slideIn 0.3s ease-out;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        /* Pulse loading */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out;
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* No data placeholder */
+        .no-data {
+            background: linear-gradient(45deg, #f8fafc 25%, #f1f5f9 25%, #f1f5f9 50%, #f8fafc 50%, #f8fafc 75%, #f1f5f9 75%, #f1f5f9 100%);
+            background-size: 20px 20px;
+            border-radius: 16px;
+            border: 1px dashed #cbd5e1;
         }
     </style>
 </head>
-<body class="font-sans bg-white min-h-screen overflow-x-hidden">
+<body class="bg-[#f8fafc] antialiased">
 
 <!-- ============================================ -->
-<!-- LOADING SCREEN -->
-<!-- ============================================ -->
-<div id="loading-screen" class="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center">
-    <div class="w-20 h-20 bg-[#EF3F09] rounded-full flex items-center justify-center mb-6 animate-pulse">
-        <i data-lucide="graduation-cap" class="w-10 h-10 text-white"></i>
+// LOADING SCREEN MODERN
+// ============================================ -->
+<div id="loading-screen" class="fixed inset-0 bg-[#0f172a] z-[9999] flex flex-col items-center justify-center transition-all duration-700">
+    <div class="relative">
+        <!-- Animated circle -->
+        <div class="w-24 h-24 bg-gradient-to-r from-[#f97316] to-[#f59e0b] rounded-full flex items-center justify-center shadow-2xl animate-pulse">
+            <i class="fas fa-graduation-cap text-white text-4xl"></i>
+        </div>
+        <!-- Spinning ring -->
+        <div class="absolute -inset-1 border-4 border-transparent border-t-[#f97316] border-r-[#f59e0b] rounded-full animate-spin"></div>
     </div>
-    <h1 class="text-[#0C1C3C] text-2xl font-bold mb-2">SPMB & Humas Monitoring</h1>
-    <p class="text-gray-500 text-sm mb-6">Yayasan Insan Pendidikan Teknologi & Kejuruan</p>
-    <div class="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div id="loading-progress" class="h-full bg-[#EF3F09] transition-all duration-300" style="width: 0%"></div>
+    
+    <h1 class="text-white text-3xl font-bold mt-8 tracking-tight">SPMB & Humas</h1>
+    <p class="text-[#94a3b8] text-sm mt-2 font-medium">Monitoring System · Yayasan Insan Pendidikan Teknologi & Kejuruan</p>
+    
+    <div class="w-64 h-1.5 bg-[#1e293b] rounded-full mt-8 overflow-hidden">
+        <div id="loading-progress" class="h-full bg-gradient-to-r from-[#f97316] to-[#f59e0b] transition-all duration-500 ease-out" style="width: 0%"></div>
     </div>
-    <p class="text-xs text-gray-400 mt-4" id="loading-status">Memuat konfigurasi...</p>
+    
+    <p id="loading-status" class="text-[#94a3b8] text-xs mt-4">Initializing system...</p>
 </div>
 
 <!-- ============================================ -->
-<!-- MOBILE OVERLAY -->
-<!-- ============================================ -->
-<div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+// MOBILE OVERLAY
+// ============================================ -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
 
 <!-- ============================================ -->
-<!-- MAIN APP CONTAINER -->
-<!-- ============================================ -->
-<div class="flex min-h-screen" id="app" style="display: none;">
+// MAIN APP CONTAINER
+// ============================================ -->
+<div id="app" class="flex min-h-screen" style="display: none;">
 
     <!-- ============================================ -->
-    <!-- SIDEBAR - SPMB & HUMAS THEME -->
-    <!-- ============================================ -->
-    <aside id="sidebar" class="w-72 bg-[#F7F7F7] fixed inset-y-0 left-0 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 border-r border-gray-200">
+    // SIDEBAR - MODERN DARK GRADIENT
+    // ============================================ -->
+    <aside id="sidebar" class="sidebar w-80 fixed inset-y-0 left-0 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-2xl">
         
-        <!-- Logo Section -->
-        <div class="px-6 py-5">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 bg-[#EF3F09] rounded-full flex items-center justify-center shadow-lg">
-                        <i data-lucide="graduation-cap" class="w-7 h-7 text-white"></i>
+        <!-- Logo Area dengan Glass Effect -->
+        <div class="px-6 py-8">
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <div class="w-14 h-14 bg-gradient-to-br from-[#f97316] to-[#f59e0b] rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+                        <i class="fas fa-graduation-cap text-white text-2xl"></i>
                     </div>
-                    <div>
-                        <h1 class="text-[#0C1C3C] text-lg font-bold">SPMB & Humas</h1>
-                        <p class="text-[#0C1C3C] text-xs font-normal opacity-70">Monitoring System</p>
-                    </div>
+                    <div class="absolute -inset-1 bg-orange-500/20 blur-xl rounded-full"></div>
                 </div>
-                <button onclick="toggleSidebar()" aria-label="Close sidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-200 cursor-pointer transition-all duration-200">
-                    <i data-lucide="x" class="w-5 h-5 text-gray-600"></i>
-                </button>
+                <div>
+                    <h1 class="text-white text-xl font-bold tracking-tight">SPMB & Humas</h1>
+                    <p class="text-[#94a3b8] text-xs font-medium mt-0.5">Monitoring System</p>
+                </div>
             </div>
         </div>
 
-        <!-- User Info - Mobile -->
-        <div class="px-6 py-3 lg:hidden border-t border-b border-gray-200">
+        <!-- User Info Card - Mobile -->
+        <div class="mx-6 mb-4 p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 lg:hidden">
             <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-[#EF3F09]/10 rounded-full flex items-center justify-center">
-                    <i data-lucide="user" class="w-6 h-6 text-[#EF3F09]"></i>
+                <div class="w-10 h-10 bg-gradient-to-br from-[#f97316] to-[#f59e0b] rounded-xl flex items-center justify-center">
+                    <i class="fas fa-user text-white text-sm"></i>
                 </div>
-                <div class="min-w-0 flex-1">
-                    <p id="mobile-user-name" class="text-[#0C1C3C] text-sm font-semibold truncate">Administrator</p>
-                    <p id="mobile-user-role" class="text-gray-500 text-xs truncate">Admin</p>
+                <div class="flex-1 min-w-0">
+                    <p id="mobile-user-name" class="text-white text-sm font-semibold truncate">Administrator</p>
+                    <p id="mobile-user-role" class="text-[#94a3b8] text-xs truncate">Admin</p>
                 </div>
             </div>
         </div>
 
         <!-- Navigation Menu -->
-        <nav class="flex-1 px-6 py-4 space-y-6 overflow-y-auto scrollbar-hide">
+        <nav class="flex-1 px-6 space-y-8 overflow-y-auto scrollbar-hide pb-6">
             
-            <!-- Utama Section -->
+            <!-- Main Menu -->
             <div>
-                <h3 class="text-[#0C1C3C] text-xs font-semibold uppercase tracking-wider mb-3">Utama</h3>
+                <h3 class="text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-3">Main</h3>
                 <div class="space-y-1">
-                    <a href="#" data-page="dashboard" onclick="app.navigateTo('dashboard'); return false;" class="cursor-pointer">
-                        <div id="nav-dashboard" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] bg-[#276874] text-white">
-                            <i data-lucide="trending-up" class="w-5 h-5"></i>
-                            <span>Dashboard</span>
+                    <a href="#" data-page="dashboard" onclick="app.navigateTo('dashboard'); return false;" class="block">
+                        <div id="nav-dashboard" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#f97316] text-white transition-all duration-200">
+                            <i class="fas fa-chart-pie w-5 h-5"></i>
+                            <span class="font-medium">Dashboard</span>
                         </div>
                     </a>
                 </div>
@@ -154,24 +230,24 @@
 
             <!-- SPMB Monitoring -->
             <div>
-                <h3 class="text-[#0C1C3C] text-xs font-semibold uppercase tracking-wider mb-3">SPMB Monitoring</h3>
+                <h3 class="text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-3">SPMB Monitoring</h3>
                 <div class="space-y-1">
-                    <a href="#" data-page="spmb-smp" onclick="app.navigateTo('spmb-smp'); return false;" class="group cursor-pointer">
-                        <div id="nav-spmb-smp" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
-                            <i data-lucide="school" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
-                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">SMP</span>
+                    <a href="#" data-page="spmb-smp" onclick="app.navigateTo('spmb-smp'); return false;" class="block">
+                        <div id="nav-spmb-smp" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                            <i class="fas fa-school w-5 h-5"></i>
+                            <span class="font-medium">SMP</span>
                         </div>
                     </a>
-                    <a href="#" data-page="spmb-smk" onclick="app.navigateTo('spmb-smk'); return false;" class="group cursor-pointer">
-                        <div id="nav-spmb-smk" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
-                            <i data-lucide="graduation-cap" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
-                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">SMK</span>
+                    <a href="#" data-page="spmb-smk" onclick="app.navigateTo('spmb-smk'); return false;" class="block">
+                        <div id="nav-spmb-smk" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                            <i class="fas fa-graduation-cap w-5 h-5"></i>
+                            <span class="font-medium">SMK</span>
                         </div>
                     </a>
-                    <a href="#" data-page="spmb-comparison" onclick="app.navigateTo('spmb-comparison'); return false;" class="group cursor-pointer">
-                        <div id="nav-spmb-comparison" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
-                            <i data-lucide="bar-chart-2" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
-                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Perbandingan</span>
+                    <a href="#" data-page="spmb-comparison" onclick="app.navigateTo('spmb-comparison'); return false;" class="block">
+                        <div id="nav-spmb-comparison" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                            <i class="fas fa-chart-simple w-5 h-5"></i>
+                            <span class="font-medium">Perbandingan</span>
                         </div>
                     </a>
                 </div>
@@ -179,18 +255,18 @@
 
             <!-- Agenda Humas -->
             <div>
-                <h3 class="text-[#0C1C3C] text-xs font-semibold uppercase tracking-wider mb-3">Agenda Humas</h3>
+                <h3 class="text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-3">Agenda Humas</h3>
                 <div class="space-y-1">
-                    <a href="#" data-page="agenda" onclick="app.navigateTo('agenda'); return false;" class="group cursor-pointer">
-                        <div id="nav-agenda" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
-                            <i data-lucide="calendar" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
-                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Kalender Agenda</span>
+                    <a href="#" data-page="agenda" onclick="app.navigateTo('agenda'); return false;" class="block">
+                        <div id="nav-agenda" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                            <i class="fas fa-calendar w-5 h-5"></i>
+                            <span class="font-medium">Kalender Agenda</span>
                         </div>
                     </a>
-                    <a href="#" data-page="agenda-list" onclick="app.navigateTo('agenda-list'); return false;" class="group cursor-pointer">
-                        <div id="nav-agenda-list" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
-                            <i data-lucide="list" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
-                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Daftar Kegiatan</span>
+                    <a href="#" data-page="agenda-list" onclick="app.navigateTo('agenda-list'); return false;" class="block">
+                        <div id="nav-agenda-list" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                            <i class="fas fa-list-check w-5 h-5"></i>
+                            <span class="font-medium">Daftar Kegiatan</span>
                         </div>
                     </a>
                 </div>
@@ -198,24 +274,24 @@
 
             <!-- Manajemen Data -->
             <div>
-                <h3 class="text-[#0C1C3C] text-xs font-semibold uppercase tracking-wider mb-3">Manajemen Data</h3>
+                <h3 class="text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-3">Manajemen Data</h3>
                 <div class="space-y-1">
-                    <a href="#" data-page="input-data" onclick="app.navigateTo('input-data'); return false;" class="group cursor-pointer">
-                        <div id="nav-input-data" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
-                            <i data-lucide="plus-circle" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
-                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Input Data</span>
+                    <a href="#" data-page="input-data" onclick="app.navigateTo('input-data'); return false;" class="block">
+                        <div id="nav-input-data" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                            <i class="fas fa-circle-plus w-5 h-5"></i>
+                            <span class="font-medium">Input Data</span>
                         </div>
                     </a>
-                    <a href="#" data-page="gallery" onclick="app.navigateTo('gallery'); return false;" class="group cursor-pointer">
-                        <div id="nav-gallery" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
-                            <i data-lucide="images" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
-                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Gallery Foto</span>
+                    <a href="#" data-page="gallery" onclick="app.navigateTo('gallery'); return false;" class="block">
+                        <div id="nav-gallery" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                            <i class="fas fa-images w-5 h-5"></i>
+                            <span class="font-medium">Gallery Foto</span>
                         </div>
                     </a>
-                    <a href="#" data-page="data-spmb" onclick="app.navigateTo('data-spmb'); return false;" class="group cursor-pointer">
-                        <div id="nav-data-spmb" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
-                            <i data-lucide="database" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
-                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Data SPMB</span>
+                    <a href="#" data-page="data-spmb" onclick="app.navigateTo('data-spmb'); return false;" class="block">
+                        <div id="nav-data-spmb" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                            <i class="fas fa-database w-5 h-5"></i>
+                            <span class="font-medium">Data SPMB</span>
                         </div>
                     </a>
                 </div>
@@ -223,111 +299,117 @@
 
             <!-- Sistem -->
             <div>
-                <h3 class="text-[#0C1C3C] text-xs font-semibold uppercase tracking-wider mb-3">Sistem</h3>
+                <h3 class="text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-3">Sistem</h3>
                 <div class="space-y-1">
-                    <a href="#" data-page="settings" onclick="app.navigateTo('settings'); return false;" class="group cursor-pointer">
-                        <div id="nav-settings" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
-                            <i data-lucide="settings" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
-                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Pengaturan</span>
+                    <a href="#" data-page="settings" onclick="app.navigateTo('settings'); return false;" class="block">
+                        <div id="nav-settings" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200">
+                            <i class="fas fa-gear w-5 h-5"></i>
+                            <span class="font-medium">Pengaturan</span>
                         </div>
                     </a>
                 </div>
             </div>
         </nav>
 
-        <!-- User Profile at Bottom -->
-        <div class="px-6 pb-6 mt-auto">
-            <div id="user-profile" class="flex items-center gap-3 p-3 bg-white rounded-[20px] border border-gray-100 shadow-sm">
-                <div class="w-12 h-12 bg-[#EF3F09]/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="user" class="w-6 h-6 text-[#EF3F09]"></i>
+        <!-- User Profile Card - Bottom -->
+        <div class="px-6 pb-8 mt-auto">
+            <div id="user-profile" class="flex items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#f97316] to-[#f59e0b] rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-user text-white text-lg"></i>
                 </div>
-                <div class="min-w-0 flex-1">
-                    <p id="sidebar-user-name" class="text-[#0C1C3C] text-sm font-semibold truncate">Administrator</p>
-                    <p id="sidebar-user-role" class="text-gray-500 text-xs truncate">Admin</p>
+                <div class="flex-1 min-w-0">
+                    <p id="sidebar-user-name" class="text-white text-sm font-semibold truncate">Administrator</p>
+                    <p id="sidebar-user-role" class="text-[#94a3b8] text-xs truncate">Admin</p>
                 </div>
-                <button onclick="app.handleLogout()" id="logout-btn" class="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 cursor-pointer" title="Logout">
-                    <i data-lucide="log-out" class="w-5 h-5 text-gray-600 hover:text-[#EF4444]"></i>
+                <button onclick="app.handleLogout()" id="logout-btn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-all duration-200" title="Logout">
+                    <i class="fas fa-sign-out-alt text-sm"></i>
                 </button>
             </div>
         </div>
     </aside>
 
     <!-- ============================================ -->
-    <!-- MAIN CONTENT -->
-    <!-- ============================================ -->
-    <main class="flex-1 lg:ml-72 p-4 md:p-6 bg-white min-h-screen overflow-x-hidden">
+    // MAIN CONTENT - MODERN CARDS
+    // ============================================ -->
+    <main class="flex-1 lg:ml-80 p-6 lg:p-8 bg-[#f8fafc] min-h-screen">
         
         <!-- Mobile Header -->
-        <div class="lg:hidden flex items-center justify-between mb-6 bg-[#F7F7F7] rounded-[20px] p-4">
-            <button onclick="toggleSidebar()" aria-label="Open menu" class="p-2 rounded-lg hover:bg-gray-200 cursor-pointer transition-all duration-200">
-                <i data-lucide="menu" class="w-6 h-6 text-[#0C1C3C]"></i>
+        <div class="lg:hidden flex items-center justify-between mb-6 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-all duration-200">
+                <i class="fas fa-bars text-gray-700 text-lg"></i>
             </button>
-            <h1 class="text-[#0C1C3C] text-lg font-bold">SPMB & Humas</h1>
+            <h1 class="text-gray-900 text-lg font-bold gradient-text">SPMB & Humas</h1>
             <div class="w-10"></div>
         </div>
 
         <!-- DYNAMIC CONTENT AREA -->
-        <div id="content-area">
-            <!-- Content akan diisi oleh JavaScript -->
+        <div id="content-area" class="animate-fade-in">
+            <!-- Content akan diisi oleh JavaScript - AWALNYA KOSONG -->
         </div>
     </main>
 </div>
 
 <!-- ============================================ -->
-<!-- LOGIN MODAL -->
-<!-- ============================================ -->
-<div id="login-modal" class="fixed inset-0 bg-black/50 z-[9998] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-[20px] max-w-md w-full overflow-hidden shadow-2xl animate-fade-in">
-        <div class="bg-[#EF3F09] p-6 text-center">
-            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="graduation-cap" class="w-8 h-8 text-white"></i>
+// LOGIN MODAL - MODERN GLASSMORPHISM
+// ============================================ -->
+<div id="login-modal" class="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-[9998] hidden flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-fade-in">
+        <div class="bg-gradient-to-r from-[#f97316] to-[#f59e0b] p-8 text-center relative">
+            <div class="absolute inset-0 bg-black/10"></div>
+            <div class="relative z-10">
+                <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <i class="fas fa-graduation-cap text-white text-3xl"></i>
+                </div>
+                <h2 class="text-white text-2xl font-bold mb-1">SPMB & Humas</h2>
+                <p class="text-white/90 text-sm">Monitoring System</p>
             </div>
-            <h2 class="text-white text-2xl font-bold mb-1">SPMB & Humas</h2>
-            <p class="text-white/80 text-sm">Monitoring System</p>
         </div>
-        <div class="p-6">
-            <div class="space-y-4">
+        
+        <div class="p-8 bg-white">
+            <div class="space-y-5">
                 <div>
-                    <label class="block text-[#0C1C3C] text-sm font-medium mb-2">Username</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i data-lucide="user" class="w-5 h-5 text-gray-500"></i>
-                        </div>
-                        <input type="text" id="login-username" placeholder="Masukkan username" 
-                               class="w-full pl-10 pr-4 py-3 border border-[#DCDEDD] rounded-[16px] focus:border-[#EF3F09] focus:ring-1 focus:ring-[#EF3F09] focus:outline-none transition-all duration-200">
-                    </div>
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">
+                        <i class="fas fa-user text-gray-400 mr-2"></i>Username
+                    </label>
+                    <input type="text" id="login-username" placeholder="Masukkan username" 
+                           class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200">
                 </div>
+                
                 <div>
-                    <label class="block text-[#0C1C3C] text-sm font-medium mb-2">Password</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i data-lucide="lock" class="w-5 h-5 text-gray-500"></i>
-                        </div>
-                        <input type="password" id="login-password" placeholder="Masukkan password" 
-                               class="w-full pl-10 pr-4 py-3 border border-[#DCDEDD] rounded-[16px] focus:border-[#EF3F09] focus:ring-1 focus:ring-[#EF3F09] focus:outline-none transition-all duration-200">
-                    </div>
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">
+                        <i class="fas fa-lock text-gray-400 mr-2"></i>Password
+                    </label>
+                    <input type="password" id="login-password" placeholder="Masukkan password" 
+                           class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all duration-200">
                 </div>
-                <button onclick="window.auth?.handleLogin()" id="login-btn" class="w-full bg-[#EF3F09] text-white py-3 rounded-[16px] font-semibold hover:bg-[#d63608] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2">
-                    <i data-lucide="log-in" class="w-5 h-5"></i>
+                
+                <button onclick="window.auth?.handleLogin()" id="login-btn" 
+                        class="w-full bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white py-3.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-orange-500/30 hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2">
+                    <i class="fas fa-arrow-right-to-bracket"></i>
                     <span>Masuk ke Dashboard</span>
                 </button>
-                <div class="bg-[#F7F7F7] p-4 rounded-[20px] text-sm">
-                    <p class="text-[#0C1C3C] font-medium mb-2 flex items-center gap-2">
-                        <i data-lucide="info" class="w-4 h-4 text-[#EF3F09]"></i>
+                
+                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                    <p class="text-gray-700 font-semibold mb-3 flex items-center gap-2 text-sm">
+                        <i class="fas fa-circle-info text-[#f97316]"></i>
                         Akses Demo:
                     </p>
                     <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div class="bg-white p-2 rounded">
-                            <span class="font-bold">Admin:</span> admin / super123
+                        <div class="bg-white p-2.5 rounded-xl border border-gray-100">
+                            <span class="font-bold text-gray-900">Admin:</span>
+                            <span class="text-gray-600 ml-1">admin / super123</span>
                         </div>
-                        <div class="bg-white p-2 rounded">
-                            <span class="font-bold">SMP:</span> smp / smp123
+                        <div class="bg-white p-2.5 rounded-xl border border-gray-100">
+                            <span class="font-bold text-gray-900">SMP:</span>
+                            <span class="text-gray-600 ml-1">smp / smp123</span>
                         </div>
-                        <div class="bg-white p-2 rounded">
-                            <span class="font-bold">SMK:</span> smk / smk123
+                        <div class="bg-white p-2.5 rounded-xl border border-gray-100">
+                            <span class="font-bold text-gray-900">SMK:</span>
+                            <span class="text-gray-600 ml-1">smk / smk123</span>
                         </div>
-                        <div class="bg-white p-2 rounded">
-                            <span class="font-bold">Humas:</span> humas / humas123
+                        <div class="bg-white p-2.5 rounded-xl border border-gray-100">
+                            <span class="font-bold text-gray-900">Humas:</span>
+                            <span class="text-gray-600 ml-1">humas / humas123</span>
                         </div>
                     </div>
                 </div>
@@ -337,54 +419,57 @@
 </div>
 
 <!-- ============================================ -->
-<!-- NOTIFICATION CONTAINER -->
-<!-- ============================================ -->
-<div id="notifications" class="fixed bottom-4 right-4 z-[9999] space-y-2 w-80"></div>
+// NOTIFICATION CONTAINER - TOAST MODERN
+// ============================================ -->
+<div id="notifications" class="fixed bottom-6 right-6 z-[9999] space-y-3 w-80"></div>
 
 <!-- ============================================ -->
-<!-- SUCCESS MODAL -->
-<!-- ============================================ -->
-<div id="success-modal" class="fixed inset-0 bg-black/50 z-[9997] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-[20px] p-6 max-w-sm w-full text-center">
-        <div class="w-16 h-16 bg-[#DCFCE7] rounded-full flex items-center justify-center mx-auto mb-4">
-            <i data-lucide="check-circle" class="w-8 h-8 text-[#166534]"></i>
+// SUCCESS MODAL
+// ============================================ -->
+<div id="success-modal" class="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-[9997] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-fade-in">
+        <div class="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-check-circle text-emerald-600 text-4xl"></i>
         </div>
-        <h3 id="success-title" class="text-[#0C1C3C] text-xl font-bold mb-2">Berhasil!</h3>
+        <h3 id="success-title" class="text-gray-900 text-xl font-bold mb-2">Berhasil!</h3>
         <p id="success-message" class="text-gray-500 text-sm mb-6">Data berhasil disimpan</p>
-        <button onclick="closeSuccessModal()" class="w-full px-4 py-2.5 bg-[#EF3F09] text-white rounded-[16px] font-medium hover:bg-[#d63608] transition-all duration-200 cursor-pointer">
+        <button onclick="closeSuccessModal()" class="w-full px-4 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200">
             Tutup
         </button>
     </div>
 </div>
 
 <!-- ============================================ -->
-<!-- ERROR MODAL -->
-<!-- ============================================ -->
-<div id="error-modal" class="fixed inset-0 bg-black/50 z-[9997] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-[20px] p-6 max-w-sm w-full text-center">
-        <div class="w-16 h-16 bg-[#FEE2E2] rounded-full flex items-center justify-center mx-auto mb-4">
-            <i data-lucide="alert-circle" class="w-8 h-8 text-[#991B1B]"></i>
+// ERROR MODAL
+// ============================================ -->
+<div id="error-modal" class="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-[9997] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-fade-in">
+        <div class="w-20 h-20 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-exclamation-circle text-red-600 text-4xl"></i>
         </div>
-        <h3 id="error-title" class="text-[#0C1C3C] text-xl font-bold mb-2">Error</h3>
+        <h3 id="error-title" class="text-gray-900 text-xl font-bold mb-2">Error</h3>
         <p id="error-message" class="text-gray-500 text-sm mb-6">Terjadi kesalahan</p>
-        <button onclick="closeErrorModal()" class="w-full px-4 py-2.5 bg-[#EF3F09] text-white rounded-[16px] font-medium hover:bg-[#d63608] transition-all duration-200 cursor-pointer">
+        <button onclick="closeErrorModal()" class="w-full px-4 py-3 bg-gradient-to-r from-[#f97316] to-[#f59e0b] text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200">
             Tutup
         </button>
     </div>
 </div>
 
 <!-- ============================================ -->
-<!-- CONFIRM MODAL -->
-<!-- ============================================ -->
-<div id="confirm-modal" class="fixed inset-0 bg-black/50 z-[9997] hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-[20px] p-6 max-w-sm w-full">
-        <h3 id="confirm-title" class="text-[#0C1C3C] text-xl font-bold mb-2">Konfirmasi</h3>
-        <p id="confirm-message" class="text-gray-500 text-sm mb-6">Apakah Anda yakin?</p>
+// CONFIRM MODAL
+// ============================================ -->
+<div id="confirm-modal" class="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-[9997] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-fade-in">
+        <div class="w-20 h-20 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-question-circle text-orange-600 text-4xl"></i>
+        </div>
+        <h3 id="confirm-title" class="text-gray-900 text-xl font-bold mb-2 text-center">Konfirmasi</h3>
+        <p id="confirm-message" class="text-gray-500 text-sm mb-6 text-center">Apakah Anda yakin?</p>
         <div class="flex gap-3">
-            <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2.5 border border-[#DCDEDD] rounded-[16px] text-[#0C1C3C] font-medium hover:border-[#EF3F09] transition-all duration-200 cursor-pointer">
+            <button onclick="closeConfirmModal()" class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all duration-200">
                 Batal
             </button>
-            <button id="confirm-action" class="flex-1 px-4 py-2.5 bg-[#EF4444] text-white rounded-[16px] font-medium hover:bg-[#dc2626] transition-all duration-200 cursor-pointer">
+            <button id="confirm-action" class="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-all duration-200">
                 Ya, Hapus
             </button>
         </div>
@@ -392,8 +477,8 @@
 </div>
 
 <!-- ============================================ -->
-<!-- JAVASCRIPT FILES -->
-<!-- ============================================ -->
+// JAVASCRIPT FILES - URUTAN PENTING!
+// ============================================ -->
 <script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="script.js"></script>
@@ -430,34 +515,40 @@
     // ============================================
     
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Lucide icons
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
-        
         // Simulate loading progress
         let progress = 0;
         const loadingStatus = document.getElementById('loading-status');
         const loadingProgress = document.getElementById('loading-progress');
         
+        const statusMessages = [
+            'Initializing system...',
+            'Loading configuration...',
+            'Connecting to spreadsheet...',
+            'Preparing dashboard...',
+            'Ready to go!'
+        ];
+        
         const interval = setInterval(function() {
-            progress += 10;
+            progress += 1;
+            
             if (loadingProgress) {
                 loadingProgress.style.width = progress + '%';
             }
             
-            if (progress === 30) {
-                if (loadingStatus) loadingStatus.textContent = 'Memuat konfigurasi...';
+            if (progress === 20) {
+                loadingStatus.textContent = statusMessages[1];
+            } else if (progress === 40) {
+                loadingStatus.textContent = statusMessages[2];
             } else if (progress === 60) {
-                if (loadingStatus) loadingStatus.textContent = 'Menghubungkan ke spreadsheet...';
-            } else if (progress === 90) {
-                if (loadingStatus) loadingStatus.textContent = 'Menyiapkan dashboard...';
+                loadingStatus.textContent = statusMessages[3];
+            } else if (progress === 80) {
+                loadingStatus.textContent = statusMessages[4];
             }
             
             if (progress >= 100) {
                 clearInterval(interval);
                 
-                // Hide loading screen after 500ms
+                // Hide loading screen
                 setTimeout(function() {
                     const loadingScreen = document.getElementById('loading-screen');
                     if (loadingScreen) {
@@ -468,24 +559,13 @@
                     }
                 }, 300);
             }
-        }, 50);
-        
-        // Check if auth is loaded
-        if (typeof window.auth === 'undefined') {
-            console.error('Auth system not loaded');
-            document.getElementById('loading-status').textContent = 'Error: Auth system not loaded';
-        }
+        }, 20);
     });
     
     // Close modals when clicking outside
     window.onclick = function(event) {
-        const loginModal = document.getElementById('login-modal');
         const successModal = document.getElementById('success-modal');
         const errorModal = document.getElementById('error-modal');
-        
-        if (event.target === loginModal) {
-            // Don't close login modal
-        }
         
         if (event.target === successModal) {
             closeSuccessModal();
@@ -498,8 +578,8 @@
 </script>
 
 <!-- ============================================ -->
-<!-- TIDAK ADA FOOTER - SESUAI PERMINTAAN -->
-<!-- ============================================ -->
+// TIDAK ADA FOOTER - SESUAI PERMINTAAN
+// ============================================ -->
 
 </body>
 </html>
