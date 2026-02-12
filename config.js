@@ -6,7 +6,7 @@ const CONFIG = {
     SPREADSHEET_ID: '1fnk5hFLA9q-ZH9NoGQPD_dP0qIQTAT9piPWLkPbFLNE', // GANTI!
     
     // ⚠️ WAJIB GANTI! Web App URL hasil deploy
-    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzXyTjyLKgRzoSFyRKByPuaDT_8MZDNx_6jSQQ00RktxbJYQucTxpZKcsTlKdh0qFWD/exec', // GANTI!
+    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbyHfvMbk2LQFdOhvq0Gvxi2qgj_6oDGce6xqCwWvMp3fvkqKO8EAmmDc_vimQTORd7h/exec', // GANTI!
     
     // JANGAN UBAH DI BAWAH INI!
     SHEETS: {
