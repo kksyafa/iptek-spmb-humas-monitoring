@@ -3,181 +3,503 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Monitoring SPMB & Agenda Humas</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>SPMB & Humas - Dashboard Monitoring</title>
+    <meta name="description" content="Dashboard Monitoring SPMB dan Agenda Humas - Data real-time dari Google Spreadsheet">
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Configuration -->
+    <script src="config.js"></script>
+    <style>
+        /* Hide footer - sesuai permintaan */
+        footer, .footer {
+            display: none !important;
+        }
+        
+        /* Loading animation */
+        #loading-screen {
+            transition: opacity 0.5s ease;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
 </head>
-<body>
-    <!-- Loading Screen -->
-    <div id="loading" class="loading-screen">
-        <div class="spinner"></div>
-        <p>Memuat Sistem Monitoring...</p>
-    </div>
+<body class="font-sans bg-white min-h-screen overflow-x-hidden">
 
-    <!-- Login Screen -->
-    <div id="login-screen" class="login-screen">
-        <div class="login-container">
-            <div class="login-header">
-                <div class="logo">
-                    <i class="fas fa-chart-line"></i>
-                    <h1>SPMB & Humas Monitoring</h1>
+<!-- ============================================ -->
+<!-- LOADING SCREEN -->
+<!-- ============================================ -->
+<div id="loading-screen" class="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center">
+    <div class="w-20 h-20 bg-[#EF3F09] rounded-full flex items-center justify-center mb-6 animate-pulse">
+        <i data-lucide="graduation-cap" class="w-10 h-10 text-white"></i>
+    </div>
+    <h1 class="text-[#0C1C3C] text-2xl font-bold mb-2">SPMB & Humas Monitoring</h1>
+    <p class="text-gray-500 text-sm mb-6">Yayasan Insan Pendidikan Teknologi & Kejuruan</p>
+    <div class="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div id="loading-progress" class="h-full bg-[#EF3F09] transition-all duration-300" style="width: 0%"></div>
+    </div>
+    <p class="text-xs text-gray-400 mt-4" id="loading-status">Memuat konfigurasi...</p>
+</div>
+
+<!-- ============================================ -->
+<!-- MOBILE OVERLAY -->
+<!-- ============================================ -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+
+<!-- ============================================ -->
+<!-- MAIN APP CONTAINER -->
+<!-- ============================================ -->
+<div class="flex min-h-screen" id="app" style="display: none;">
+
+    <!-- ============================================ -->
+    <!-- SIDEBAR - SPMB & HUMAS THEME -->
+    <!-- ============================================ -->
+    <aside id="sidebar" class="w-72 bg-[#F7F7F7] fixed inset-y-0 left-0 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 border-r border-gray-200">
+        
+        <!-- Logo Section -->
+        <div class="px-6 py-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-[#EF3F09] rounded-full flex items-center justify-center shadow-lg">
+                        <i data-lucide="graduation-cap" class="w-7 h-7 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-[#0C1C3C] text-lg font-bold">SPMB & Humas</h1>
+                        <p class="text-[#0C1C3C] text-xs font-normal opacity-70">Monitoring System</p>
+                    </div>
                 </div>
-                <p>Sistem Monitoring Penerimaan Siswa dan Agenda Humas</p>
-            </div>
-            
-            <div class="login-form">
-                <h2><i class="fas fa-lock"></i> Masuk ke Sistem</h2>
-                
-                <div class="form-group">
-                    <label for="login-username"><i class="fas fa-user"></i> Username</label>
-                    <input type="text" id="login-username" placeholder="Masukkan username">
-                </div>
-                
-                <div class="form-group">
-                    <label for="login-password"><i class="fas fa-key"></i> Password</label>
-                    <input type="password" id="login-password" placeholder="Masukkan password">
-                </div>
-                
-                <button id="btn-login" class="btn btn-primary">
-                    <i class="fas fa-sign-in-alt"></i> Login
+                <button onclick="toggleSidebar()" aria-label="Close sidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-200 cursor-pointer transition-all duration-200">
+                    <i data-lucide="x" class="w-5 h-5 text-gray-600"></i>
                 </button>
-                
-                <div class="login-info">
-                    <p><i class="fas fa-info-circle"></i> Gunakan kredensial:</p>
+            </div>
+        </div>
+
+        <!-- User Info - Mobile -->
+        <div class="px-6 py-3 lg:hidden border-t border-b border-gray-200">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-[#EF3F09]/10 rounded-full flex items-center justify-center">
+                    <i data-lucide="user" class="w-6 h-6 text-[#EF3F09]"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p id="mobile-user-name" class="text-[#0C1C3C] text-sm font-semibold truncate">Administrator</p>
+                    <p id="mobile-user-role" class="text-gray-500 text-xs truncate">Admin</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="flex-1 px-6 py-4 space-y-6 overflow-y-auto scrollbar-hide">
+            
+            <!-- Utama Section -->
+            <div>
+                <h3 class="text-[#0C1C3C] text-xs font-semibold uppercase tracking-wider mb-3">Utama</h3>
+                <div class="space-y-1">
+                    <a href="#" data-page="dashboard" onclick="app.navigateTo('dashboard'); return false;" class="cursor-pointer">
+                        <div id="nav-dashboard" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] bg-[#276874] text-white">
+                            <i data-lucide="trending-up" class="w-5 h-5"></i>
+                            <span>Dashboard</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- SPMB Monitoring -->
+            <div>
+                <h3 class="text-[#0C1C3C] text-xs font-semibold uppercase tracking-wider mb-3">SPMB Monitoring</h3>
+                <div class="space-y-1">
+                    <a href="#" data-page="spmb-smp" onclick="app.navigateTo('spmb-smp'); return false;" class="group cursor-pointer">
+                        <div id="nav-spmb-smp" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
+                            <i data-lucide="school" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
+                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">SMP</span>
+                        </div>
+                    </a>
+                    <a href="#" data-page="spmb-smk" onclick="app.navigateTo('spmb-smk'); return false;" class="group cursor-pointer">
+                        <div id="nav-spmb-smk" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
+                            <i data-lucide="graduation-cap" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
+                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">SMK</span>
+                        </div>
+                    </a>
+                    <a href="#" data-page="spmb-comparison" onclick="app.navigateTo('spmb-comparison'); return false;" class="group cursor-pointer">
+                        <div id="nav-spmb-comparison" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
+                            <i data-lucide="bar-chart-2" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
+                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Perbandingan</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Agenda Humas -->
+            <div>
+                <h3 class="text-[#0C1C3C] text-xs font-semibold uppercase tracking-wider mb-3">Agenda Humas</h3>
+                <div class="space-y-1">
+                    <a href="#" data-page="agenda" onclick="app.navigateTo('agenda'); return false;" class="group cursor-pointer">
+                        <div id="nav-agenda" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
+                            <i data-lucide="calendar" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
+                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Kalender Agenda</span>
+                        </div>
+                    </a>
+                    <a href="#" data-page="agenda-list" onclick="app.navigateTo('agenda-list'); return false;" class="group cursor-pointer">
+                        <div id="nav-agenda-list" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
+                            <i data-lucide="list" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
+                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Daftar Kegiatan</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Manajemen Data -->
+            <div>
+                <h3 class="text-[#0C1C3C] text-xs font-semibold uppercase tracking-wider mb-3">Manajemen Data</h3>
+                <div class="space-y-1">
+                    <a href="#" data-page="input-data" onclick="app.navigateTo('input-data'); return false;" class="group cursor-pointer">
+                        <div id="nav-input-data" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
+                            <i data-lucide="plus-circle" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
+                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Input Data</span>
+                        </div>
+                    </a>
+                    <a href="#" data-page="gallery" onclick="app.navigateTo('gallery'); return false;" class="group cursor-pointer">
+                        <div id="nav-gallery" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
+                            <i data-lucide="images" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
+                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Gallery Foto</span>
+                        </div>
+                    </a>
+                    <a href="#" data-page="data-spmb" onclick="app.navigateTo('data-spmb'); return false;" class="group cursor-pointer">
+                        <div id="nav-data-spmb" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
+                            <i data-lucide="database" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
+                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Data SPMB</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Sistem -->
+            <div>
+                <h3 class="text-[#0C1C3C] text-xs font-semibold uppercase tracking-wider mb-3">Sistem</h3>
+                <div class="space-y-1">
+                    <a href="#" data-page="settings" onclick="app.navigateTo('settings'); return false;" class="group cursor-pointer">
+                        <div id="nav-settings" class="flex items-center gap-2.5 px-4 py-3 rounded-[20px] hover:bg-gray-100 transition-all duration-200">
+                            <i data-lucide="settings" class="w-5 h-5 text-gray-600 group-hover:text-[#EF3F09]"></i>
+                            <span class="text-[#0C1C3C] group-hover:text-[#EF3F09]">Pengaturan</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- User Profile at Bottom -->
+        <div class="px-6 pb-6 mt-auto">
+            <div id="user-profile" class="flex items-center gap-3 p-3 bg-white rounded-[20px] border border-gray-100 shadow-sm">
+                <div class="w-12 h-12 bg-[#EF3F09]/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="user" class="w-6 h-6 text-[#EF3F09]"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p id="sidebar-user-name" class="text-[#0C1C3C] text-sm font-semibold truncate">Administrator</p>
+                    <p id="sidebar-user-role" class="text-gray-500 text-xs truncate">Admin</p>
+                </div>
+                <button onclick="app.handleLogout()" id="logout-btn" class="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 cursor-pointer" title="Logout">
+                    <i data-lucide="log-out" class="w-5 h-5 text-gray-600 hover:text-[#EF4444]"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT -->
+    <!-- ============================================ -->
+    <main class="flex-1 lg:ml-72 p-4 md:p-6 bg-white min-h-screen overflow-x-hidden">
+        
+        <!-- Mobile Header -->
+        <div class="lg:hidden flex items-center justify-between mb-6 bg-[#F7F7F7] rounded-[20px] p-4">
+            <button onclick="toggleSidebar()" aria-label="Open menu" class="p-2 rounded-lg hover:bg-gray-200 cursor-pointer transition-all duration-200">
+                <i data-lucide="menu" class="w-6 h-6 text-[#0C1C3C]"></i>
+            </button>
+            <h1 class="text-[#0C1C3C] text-lg font-bold">SPMB & Humas</h1>
+            <div class="w-10"></div>
+        </div>
+
+        <!-- DYNAMIC CONTENT AREA -->
+        <div id="content-area">
+            <!-- Content akan diisi oleh JavaScript -->
+        </div>
+    </main>
+</div>
+
+<!-- ============================================ -->
+<!-- LOGIN MODAL -->
+<!-- ============================================ -->
+<div id="login-modal" class="fixed inset-0 bg-black/50 z-[9998] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-[20px] max-w-md w-full overflow-hidden shadow-2xl animate-fade-in">
+        <div class="bg-[#EF3F09] p-6 text-center">
+            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="graduation-cap" class="w-8 h-8 text-white"></i>
+            </div>
+            <h2 class="text-white text-2xl font-bold mb-1">SPMB & Humas</h2>
+            <p class="text-white/80 text-sm">Monitoring System</p>
+        </div>
+        <div class="p-6">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[#0C1C3C] text-sm font-medium mb-2">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="user" class="w-5 h-5 text-gray-500"></i>
+                        </div>
+                        <input type="text" id="login-username" placeholder="Masukkan username" 
+                               class="w-full pl-10 pr-4 py-3 border border-[#DCDEDD] rounded-[16px] focus:border-[#EF3F09] focus:ring-1 focus:ring-[#EF3F09] focus:outline-none transition-all duration-200">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[#0C1C3C] text-sm font-medium mb-2">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="lock" class="w-5 h-5 text-gray-500"></i>
+                        </div>
+                        <input type="password" id="login-password" placeholder="Masukkan password" 
+                               class="w-full pl-10 pr-4 py-3 border border-[#DCDEDD] rounded-[16px] focus:border-[#EF3F09] focus:ring-1 focus:ring-[#EF3F09] focus:outline-none transition-all duration-200">
+                    </div>
+                </div>
+                <button onclick="window.auth?.handleLogin()" id="login-btn" class="w-full bg-[#EF3F09] text-white py-3 rounded-[16px] font-semibold hover:bg-[#d63608] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2">
+                    <i data-lucide="log-in" class="w-5 h-5"></i>
+                    <span>Masuk ke Dashboard</span>
+                </button>
+                <div class="bg-[#F7F7F7] p-4 rounded-[20px] text-sm">
+                    <p class="text-[#0C1C3C] font-medium mb-2 flex items-center gap-2">
+                        <i data-lucide="info" class="w-4 h-4 text-[#EF3F09]"></i>
+                        Akses Demo:
+                    </p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-white p-2 rounded">
+                            <span class="font-bold">Admin:</span> admin / super123
+                        </div>
+                        <div class="bg-white p-2 rounded">
+                            <span class="font-bold">SMP:</span> smp / smp123
+                        </div>
+                        <div class="bg-white p-2 rounded">
+                            <span class="font-bold">SMK:</span> smk / smk123
+                        </div>
+                        <div class="bg-white p-2 rounded">
+                            <span class="font-bold">Humas:</span> humas / humas123
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Main App (Hidden until login) -->
-    <div id="app" class="app-container" style="display: none;">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-left">
-                <button class="menu-toggle" id="menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="logo">
-                    <i class="fas fa-chart-line"></i>
-                    <div>
-                        <h1>SPMB & Humas Monitoring</h1>
-                        <p>Yayasan Insan Pendidikan Teknologi & Kejuruan</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="header-right">
-                <div class="user-menu">
-                    <div class="user-info">
-                        <div class="avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div>
-                            <span id="current-user">Administrator</span>
-                            <span id="current-role">Admin</span>
-                        </div>
-                    </div>
-                    <button id="btn-logout" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </button>
-                </div>
-            </div>
-        </header>
+<!-- ============================================ -->
+<!-- NOTIFICATION CONTAINER -->
+<!-- ============================================ -->
+<div id="notifications" class="fixed bottom-4 right-4 z-[9999] space-y-2 w-80"></div>
 
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <nav class="sidebar-nav">
-                <ul>
-                    <li>
-                        <a href="#" class="nav-item active" data-page="dashboard">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    
-                    <li class="nav-section">SPMB Monitoring</li>
-                    <li>
-                        <a href="#" class="nav-item" data-page="spmb-smp">
-                            <i class="fas fa-school"></i>
-                            <span>SMP</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="nav-item" data-page="spmb-smk">
-                            <i class="fas fa-graduation-cap"></i>
-                            <span>SMK</span>
-                        </a>
-                    </li>
-                    
-                    <li class="nav-section">Agenda Humas</li>
-                    <li>
-                        <a href="#" class="nav-item" data-page="agenda">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>Kalender Agenda</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="nav-item" data-page="agenda-list">
-                            <i class="fas fa-list"></i>
-                            <span>Daftar Kegiatan</span>
-                        </a>
-                    </li>
-                    
-                    <li>
-                        <a href="#" class="nav-item" data-page="input-data">
-                            <i class="fas fa-plus-circle"></i>
-                            <span>Input Data</span>
-                        </a>
-                    </li>
-                    
-                    <li>
-                        <a href="#" class="nav-item" data-page="gallery">
-                            <i class="fas fa-images"></i>
-                            <span>Gallery Foto</span>
-                        </a>
-                    </li>
-                    
-                    <li>
-                        <a href="#" class="nav-item" data-page="settings">
-                            <i class="fas fa-cog"></i>
-                            <span>Pengaturan</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content" id="main-content">
-            <div class="content-header" id="content-header">
-                <h2>Dashboard Overview</h2>
-                <p>Memuat data...</p>
-            </div>
-            
-            <div class="content-body" id="content-body">
-                <!-- Content akan dimuat di sini -->
-            </div>
-        </main>
-
-        <!-- Notifications -->
-        <div id="notifications" class="notifications"></div>
+<!-- ============================================ -->
+<!-- SUCCESS MODAL -->
+<!-- ============================================ -->
+<div id="success-modal" class="fixed inset-0 bg-black/50 z-[9997] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-[20px] p-6 max-w-sm w-full text-center">
+        <div class="w-16 h-16 bg-[#DCFCE7] rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="check-circle" class="w-8 h-8 text-[#166534]"></i>
+        </div>
+        <h3 id="success-title" class="text-[#0C1C3C] text-xl font-bold mb-2">Berhasil!</h3>
+        <p id="success-message" class="text-gray-500 text-sm mb-6">Data berhasil disimpan</p>
+        <button onclick="closeSuccessModal()" class="w-full px-4 py-2.5 bg-[#EF3F09] text-white rounded-[16px] font-medium hover:bg-[#d63608] transition-all duration-200 cursor-pointer">
+            Tutup
+        </button>
     </div>
+</div>
 
-    <!-- JavaScript Files -->
-    <script src="config.js"></script>
-    <script src="auth.js"></script>
-    <script src="script.js"></script>
+<!-- ============================================ -->
+<!-- ERROR MODAL -->
+<!-- ============================================ -->
+<div id="error-modal" class="fixed inset-0 bg-black/50 z-[9997] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-[20px] p-6 max-w-sm w-full text-center">
+        <div class="w-16 h-16 bg-[#FEE2E2] rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="alert-circle" class="w-8 h-8 text-[#991B1B]"></i>
+        </div>
+        <h3 id="error-title" class="text-[#0C1C3C] text-xl font-bold mb-2">Error</h3>
+        <p id="error-message" class="text-gray-500 text-sm mb-6">Terjadi kesalahan</p>
+        <button onclick="closeErrorModal()" class="w-full px-4 py-2.5 bg-[#EF3F09] text-white rounded-[16px] font-medium hover:bg-[#d63608] transition-all duration-200 cursor-pointer">
+            Tutup
+        </button>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- CONFIRM MODAL -->
+<!-- ============================================ -->
+<div id="confirm-modal" class="fixed inset-0 bg-black/50 z-[9997] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-[20px] p-6 max-w-sm w-full">
+        <h3 id="confirm-title" class="text-[#0C1C3C] text-xl font-bold mb-2">Konfirmasi</h3>
+        <p id="confirm-message" class="text-gray-500 text-sm mb-6">Apakah Anda yakin?</p>
+        <div class="flex gap-3">
+            <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2.5 border border-[#DCDEDD] rounded-[16px] text-[#0C1C3C] font-medium hover:border-[#EF3F09] transition-all duration-200 cursor-pointer">
+                Batal
+            </button>
+            <button id="confirm-action" class="flex-1 px-4 py-2.5 bg-[#EF4444] text-white rounded-[16px] font-medium hover:bg-[#dc2626] transition-all duration-200 cursor-pointer">
+                Ya, Hapus
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- JAVASCRIPT FILES -->
+<!-- ============================================ -->
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="script.js"></script>
+
+<script>
+    // ============================================
+    // GLOBAL FUNCTIONS
+    // ============================================
     
-    <script>
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('login-screen').style.display = 'flex';
-            }, 1000);
-        });
-    </script>
+    // Toggle sidebar
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+        document.body.classList.toggle('overflow-hidden');
+    }
+    
+    // Close modals
+    function closeSuccessModal() {
+        document.getElementById('success-modal').classList.add('hidden');
+    }
+    
+    function closeErrorModal() {
+        document.getElementById('error-modal').classList.add('hidden');
+    }
+    
+    function closeConfirmModal() {
+        document.getElementById('confirm-modal').classList.add('hidden');
+    }
+    
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        
+        // Simulate loading progress
+        let progress = 0;
+        const loadingStatus = document.getElementById('loading-status');
+        const loadingProgress = document.getElementById('loading-progress');
+        
+        const interval = setInterval(function() {
+            progress += 10;
+            if (loadingProgress) {
+                loadingProgress.style.width = progress + '%';
+            }
+            
+            if (progress === 30) {
+                if (loadingStatus) loadingStatus.textContent = 'Memuat konfigurasi...';
+            } else if (progress === 60) {
+                if (loadingStatus) loadingStatus.textContent = 'Menghubungkan ke spreadsheet...';
+            } else if (progress === 90) {
+                if (loadingStatus) loadingStatus.textContent = 'Menyiapkan dashboard...';
+            }
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                
+                // Hide loading screen after 500ms
+                setTimeout(function() {
+                    const loadingScreen = document.getElementById('loading-screen');
+                    if (loadingScreen) {
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(function() {
+                            loadingScreen.style.display = 'none';
+                        }, 500);
+                    }
+                }, 300);
+            }
+        }, 50);
+        
+        // Check if auth is loaded
+        if (typeof window.auth === 'undefined') {
+            console.error('Auth system not loaded');
+            document.getElementById('loading-status').textContent = 'Error: Auth system not loaded';
+        }
+    });
+    
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const loginModal = document.getElementById('login-modal');
+        const successModal = document.getElementById('success-modal');
+        const errorModal = document.getElementById('error-modal');
+        
+        if (event.target === loginModal) {
+            // Don't close login modal
+        }
+        
+        if (event.target === successModal) {
+            closeSuccessModal();
+        }
+        
+        if (event.target === errorModal) {
+            closeErrorModal();
+        }
+    };
+</script>
+
+<!-- ============================================ -->
+<!-- TIDAK ADA FOOTER - SESUAI PERMINTAAN -->
+<!-- ============================================ -->
+
 </body>
 </html>
