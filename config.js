@@ -1,19 +1,20 @@
-// Konfigurasi Dashboard Monitoring SPMB & Humas
-// UPDATE DUA VARIABEL INI SETELAH SETUP GOOGLE SHEETS
+// ============================================
+// KONFIGURASI DASHBOARD MONITORING SPMB & HUMAS
+// ============================================
 
 const CONFIG = {
     // ============================================
     // ⚠️ UPDATE DUA VARIABEL INI SETELAH SETUP ⚠️
     // ============================================
     
-    // 1. Google Spreadsheet ID (Dapatkan dari URL Google Sheets)
+    // Google Spreadsheet ID (dari URL spreadsheet)
     SPREADSHEET_ID: '1fnk5hFLA9q-ZH9NoGQPD_dP0qIQTAT9piPWLkPbFLNE',
     
-    // 2. Google Apps Script Web App URL (Setelah deploy)
+    // Google Apps Script Web App URL (setelah deploy)
     WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbyrNyz1uYx9NJ4pLsD_i68uKymU8t_raieFurp2NYSL4J4LxAL0GCQM79rl60gGSck/exec',
     
     // ============================================
-    // JANGAN UBAH KODE DI BAWAH INI
+    // KONFIGURASI APLIKASI - JANGAN DIUBAH
     // ============================================
     
     // Nama sheet di Google Spreadsheet
@@ -25,99 +26,87 @@ const CONFIG = {
         USERS: 'Users'
     },
     
-    // User accounts (default - bisa diubah di spreadsheet)
+    // Tahun ajaran yang tersedia
+    ACADEMIC_YEARS: ['2025/2026', '2026/2027'],
+    
+    // Tahun ajaran default
+    DEFAULT_ACADEMIC_YEAR: '2026/2027',
+    
+    // Definisi periode SPMB per tahun ajaran
+    PERIODE_DEFINITIONS: {
+        '2025/2026': {
+            earlybird: { 
+                start: '2024-11-21', 
+                end: '2025-01-31', 
+                label: '21 Nov 2024 - 31 Jan 2025',
+                months: [11, 12, 1] // November, Desember, Januari
+            },
+            gelombang1: { 
+                start: '2025-02-01', 
+                end: '2025-04-30', 
+                label: '01 Feb 2025 - 30 Apr 2025',
+                months: [2, 3, 4] // Februari, Maret, April
+            },
+            gelombang2: { 
+                start: '2025-05-01', 
+                end: '2025-07-15', 
+                label: '01 Mei 2025 - 15 Jul 2025',
+                months: [5, 6, 7] // Mei, Juni, Juli
+            }
+        },
+        '2026/2027': {
+            earlybird: { 
+                start: '2025-11-21', 
+                end: '2026-01-31', 
+                label: '21 Nov 2025 - 31 Jan 2026',
+                months: [11, 12, 1] // November, Desember, Januari
+            },
+            gelombang1: { 
+                start: '2026-02-01', 
+                end: '2026-04-30', 
+                label: '01 Feb 2026 - 30 Apr 2026',
+                months: [2, 3, 4] // Februari, Maret, April
+            },
+            gelombang2: { 
+                start: '2026-05-01', 
+                end: '2026-07-15', 
+                label: '01 Mei 2026 - 15 Jul 2026',
+                months: [5, 6, 7] // Mei, Juni, Juli
+            }
+        }
+    },
+    
+    // User default (untuk fallback jika sheet Users belum diisi)
     DEFAULT_USERS: [
-        {
-            username: 'admin',
-            password: 'super123',
-            name: 'Administrator',
-            role: 'admin',
-            unit: 'all'
-        },
-        {
-            username: 'smp',
-            password: 'smp123',
-            name: 'Ketua SMP',
-            role: 'coordinator',
-            unit: 'smp'
-        },
-        {
-            username: 'smk',
-            password: 'smk123',
-            name: 'Ketua SMK',
-            role: 'coordinator',
-            unit: 'smk'
-        },
-        {
-            username: 'humas',
-            password: 'humas123',
-            name: 'Staf Humas',
-            role: 'staff',
-            unit: 'humas'
-        }
+        { username: 'admin', password: 'super123', name: 'Administrator', role: 'Admin', unit: 'all' },
+        { username: 'smp', password: 'smp123', name: 'Ketua SMP', role: 'Koordinator SMP', unit: 'smp' },
+        { username: 'smk', password: 'smk123', name: 'Ketua SMK', role: 'Koordinator SMK', unit: 'smk' },
+        { username: 'humas', password: 'humas123', name: 'Staf Humas', role: 'Staf Humas', unit: 'humas' }
     ],
     
-    // Application settings
-    APP: {
-        NAME: 'SPMB & Humas Monitoring',
-        VERSION: '1.0.0',
-        AUTHOR: 'Yayasan Insan Pendidikan Teknologi & Kejuruan',
-        YEAR: new Date().getFullYear(),
-        
-        // Indonesian months
-        MONTHS: [
-            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-        ],
-        
-        // Indonesian days
-        DAYS: ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
-    },
-    
-    // SPMB Targets
-    SPMB_TARGETS: {
-        SMP: {
-            TOTAL: 80,
-            MONTHLY: [25, 30, 35, 40, 45, 50, 30, 25, 20, 15, 10, 5]
-        },
-        SMK: {
-            TOTAL: 280,
-            MONTHLY: [35, 40, 45, 50, 55, 60, 40, 35, 25, 20, 15, 10]
-        }
-    },
-    
-    // Agenda status options
+    // Status agenda
     AGENDA_STATUS: {
-        scheduled: { label: 'Terjadwal', color: '#fff3cd', text: '#856404' },
-        ongoing: { label: 'Berlangsung', color: '#d1ecf1', text: '#0c5460' },
-        completed: { label: 'Selesai', color: '#d4edda', text: '#155724' }
+        scheduled: { label: 'Terjadwal', color: 'bg-info-light text-info-dark', icon: 'calendar' },
+        ongoing: { label: 'Berlangsung', color: 'bg-warning-light text-warning-dark', icon: 'clock' },
+        completed: { label: 'Selesai', color: 'bg-success-light text-success-dark', icon: 'check-circle' }
     },
     
-    // Agenda categories
+    // Kategori agenda
     AGENDA_CATEGORIES: [
-        'Meeting', 'Event', 'Kunjungan', 'Workshop', 
-        'Open House', 'Pelatihan', 'Rapat', 'Lainnya'
+        'Meeting', 'Event', 'Workshop', 'Open House', 'Kunjungan', 'Pelatihan', 'Rapat', 'Lainnya'
     ],
     
-    // SPMB programs
-    SPMB_PROGRAMS: {
-        SMP: ['Reguler', 'Prestasi', 'Kemitraan', 'Beasiswa'],
-        SMK: ['Teknik Sepeda  MOtor', 'MDesain Komunikasi Visual', 'Akuntansi', 'Perhotelan']
-    },
-    
-    // Theme colors
+    // Warna tema
     THEME: {
-        COLORS: {
-            primary: '#2c3e50',
-            secondary: '#3498db',
-            success: '#27ae60',
-            warning: '#f39c12',
-            danger: '#e74c3c',
-            smp: '#3498db',
-            smk: '#9b59b6'
-        }
+        primary: '#EF3F09',
+        'primary-hover': '#d63608',
+        smp: '#3498db',
+        smk: '#9b59b6',
+        earlybird: '#10B981',
+        gelombang1: '#3B82F6',
+        gelombang2: '#8B5CF6'
     }
 };
 
-// Make config globally available
+// Export untuk digunakan di file lain
 window.CONFIG = CONFIG;
